@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Added maximum-scale=1.0 and user-scalable=no to prevent zooming issues on mobile -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>DocScan Pro - Mobile</title>
+  <title>DocScan Pro - Pencil Enhancer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   
@@ -27,7 +26,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      height: 100dvh; /* Mobile viewport height fix */
+      height: 100dvh; 
       overflow: hidden;
     }
 
@@ -121,7 +120,6 @@
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 8px;
-      /* hide scrollbar */
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
@@ -148,6 +146,15 @@
       background: var(--accent);
       color: white;
     }
+    /* Highlight the new pencil filter */
+    .filter-btn[data-filter="pencil_enhance"] {
+      border-color: #f59e0b;
+    }
+    .filter-btn[data-filter="pencil_enhance"].active {
+      background: #f59e0b;
+      color: #fff;
+    }
+
 
     .slider-group {
       display: flex;
@@ -297,6 +304,7 @@
       font-size: 1.2rem;
     }
 
+
     .empty-state {
       text-align: center;
       color: var(--text-muted);
@@ -344,6 +352,33 @@
       display: none;
     }
 
+    /* Loading Overlay */
+    .loading-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 50;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 1.2rem;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .loading-spinner {
+        border: 4px solid rgba(255,255,255,0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
     /* ========================================= */
     /* Responsive Design for Mobile (max-width: 768px) */
     /* ========================================= */
@@ -352,23 +387,22 @@
         padding: 10px 15px;
       }
       
-      .header-actions .btn-text { display: none; } /* Hide text on header buttons */
+      .header-actions .btn-text { display: none; }
       .header-actions .btn { padding: 8px 12px; }
 
       .app-container {
-        flex-direction: column-reverse; /* Preview on top, controls on bottom when open */
+        flex-direction: column-reverse;
       }
 
-      /* Make sidebar act as a bottom sheet for controls */
       .controls-panel {
         width: 100%;
-        height: 45vh;
+        height: 50vh;
         border-right: none;
         border-top: 1px solid var(--border);
         position: absolute;
         bottom: 0;
         left: 0;
-        transform: translateY(100%); /* Hidden by default on mobile */
+        transform: translateY(100%);
         padding: 15px;
         gap: 15px;
       }
@@ -382,7 +416,7 @@
       }
 
       .edit-toggle-btn {
-        display: flex; /* Show edit toggle button on mobile */
+        display: flex;
         position: absolute;
         bottom: 15px;
         left: 50%;
@@ -393,16 +427,14 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
 
-      /* Hide capture buttons from sidebar on mobile, use FABs instead */
       .controls-panel > div:first-child {
         display: none;
       }
 
       .mobile-fab-container {
-        display: flex; /* Show FABs on mobile */
+        display: flex; 
       }
       
-      /* Adjust thumbnails bar for mobile */
       .thumbnails-bar {
         padding: 8px 10px;
         height: 80px;
@@ -414,7 +446,7 @@
 
   <header>
     <div class="logo">
-      <i class="fa-solid fa-file-contract"></i>
+      <i class="fa-solid fa-file-signature"></i>
       <span>DocScan Pro</span>
     </div>
     <div class="header-actions">
@@ -431,7 +463,6 @@
     
     <!-- Controls Panel (Bottom Sheet on Mobile, Sidebar on Desktop) -->
     <aside class="controls-panel" id="controlsPanel">
-      <!-- Hidden on mobile, shown on desktop -->
       <div>
         <div class="section-title">1. Capture / Upload</div>
         <div class="input-group">
@@ -443,12 +474,11 @@
       <div>
         <div class="section-title">Filters</div>
         <div class="filter-scroll">
-          <button class="filter-btn active" data-filter="magic_color">✨ Magic Color</button>
+          <button class="filter-btn active" data-filter="pencil_enhance">✏️ Pencil Enhancer</button>
+          <button class="filter-btn" data-filter="magic_color">✨ Magic Color</button>
           <button class="filter-btn" data-filter="magic_bw">📄 Magic Pro B&W</button>
-          <button class="filter-btn" data-filter="sharpen">🔍 Sharpen</button>
+          <button class="filter-btn" data-filter="sharpen">🔍 Auto Sharpen</button>
           <button class="filter-btn" data-filter="original">Original</button>
-          <button class="filter-btn" data-filter="grayscale">Grayscale</button>
-          <button class="filter-btn" data-filter="lighten">Lighten</button>
         </div>
       </div>
 
@@ -456,16 +486,20 @@
         <div class="section-title">Adjustments</div>
         <div class="input-group">
           <div class="slider-group">
-            <label>Brightness <span id="valBrightness">0</span></label>
-            <input type="range" id="sliderBrightness" min="-100" max="100" value="0" />
+            <label>Darken Text / Contrast <span id="valContrast">40</span></label>
+            <input type="range" id="sliderContrast" min="-100" max="100" value="40" />
           </div>
           <div class="slider-group">
-            <label>Contrast <span id="valContrast">0</span></label>
-            <input type="range" id="sliderContrast" min="-100" max="100" value="0" />
+            <label>Whiten Background <span id="valBrightness">20</span></label>
+            <input type="range" id="sliderBrightness" min="-100" max="100" value="20" />
           </div>
-          <div class="slider-group">
+          <div class="slider-group" id="thresholdGroup" style="display:none;">
             <label>B&W Threshold <span id="valThreshold">128</span></label>
             <input type="range" id="sliderThreshold" min="50" max="200" value="128" />
+          </div>
+           <div class="slider-group" id="sharpnessGroup">
+            <label>Extra Sharpening <span id="valSharpness">50</span></label>
+            <input type="range" id="sliderSharpness" min="0" max="100" value="50" />
           </div>
         </div>
       </div>
@@ -482,13 +516,17 @@
     <!-- Main Viewport -->
     <main class="preview-area">
       <div id="emptyState" class="empty-state">
-        <i class="fa-solid fa-scanner"></i>
-        <h2>Tap to Scan</h2>
-        <p>Use the camera or upload images to start creating your document.</p>
+        <i class="fa-solid fa-pencil"></i>
+        <h2>Enhance Pencil Notes</h2>
+        <p>Capture or upload your blurry pencil notes to make them crystal clear.</p>
       </div>
 
       <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
         <canvas id="mainCanvas"></canvas>
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <span>Processing...</span>
+        </div>
       </div>
 
       <!-- Mobile Edit Toggle -->
@@ -529,52 +567,52 @@
     // State management
     let pages = []; 
     let activeIndex = -1;
-    let isControlsOpen = false; // Mobile bottom sheet state
+    let isControlsOpen = false;
+    let isProcessing = false;
+    let processTimeout = null;
 
     // DOM Elements
     const fileInput = document.getElementById('fileInput');
 
-    // Capture Buttons (Desktop & Mobile)
     const uploadBtnDesktop = document.getElementById('uploadBtnDesktop');
     const openCamBtnDesktop = document.getElementById('openCamBtnDesktop');
     const uploadBtnMobile = document.getElementById('uploadBtnMobile');
     const openCamBtnMobile = document.getElementById('openCamBtnMobile');
 
-    // Mobile UI specific
     const editToggleBtn = document.getElementById('editToggleBtn');
     const controlsPanel = document.getElementById('controlsPanel');
-    const mobileFabs = document.getElementById('mobileFabs');
 
-    // Camera UI
     const camModal = document.getElementById('camModal');
     const webcamVideo = document.getElementById('webcamVideo');
     const captureSnapBtn = document.getElementById('captureSnapBtn');
     const closeCamBtn = document.getElementById('closeCamBtn');
 
-    // Canvas & Preview
     const mainCanvas = document.getElementById('mainCanvas');
     const ctx = mainCanvas.getContext('2d');
     const canvasWrapper = document.getElementById('canvasWrapper');
     const emptyState = document.getElementById('emptyState');
     const thumbBar = document.getElementById('thumbBar');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
-    // Actions
     const exportPdfBtn = document.getElementById('exportPdfBtn');
     const clearAllBtn = document.getElementById('clearAllBtn');
 
-    // Controls
     const sliderBrightness = document.getElementById('sliderBrightness');
     const sliderContrast = document.getElementById('sliderContrast');
     const sliderThreshold = document.getElementById('sliderThreshold');
+    const sliderSharpness = document.getElementById('sliderSharpness');
     const valBrightness = document.getElementById('valBrightness');
     const valContrast = document.getElementById('valContrast');
     const valThreshold = document.getElementById('valThreshold');
+    const valSharpness = document.getElementById('valSharpness');
+
+    const thresholdGroup = document.getElementById('thresholdGroup');
+    const sharpnessGroup = document.getElementById('sharpnessGroup');
 
     let stream = null;
 
     // --- Initialization & UI Binding ---
 
-    // Handle Uploads
     const triggerUpload = () => fileInput.click();
     if(uploadBtnDesktop) uploadBtnDesktop.onclick = triggerUpload;
     if(uploadBtnMobile) uploadBtnMobile.onclick = triggerUpload;
@@ -593,17 +631,22 @@
       fileInput.value = '';
     };
 
-    // Handle Camera
+    // Handle High Res Camera
     const openCamera = async () => {
       try {
+        // Request higher resolution for better pencil detail
         stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "environment" }, 
+          video: { 
+              facingMode: "environment",
+              width: { ideal: 1920 },
+              height: { ideal: 1080 } 
+          }, 
           audio: false 
         });
         webcamVideo.srcObject = stream;
         camModal.style.display = 'flex';
       } catch (err) {
-        alert("Camera access denied or not available on your device.");
+        alert("Camera access denied or not available.");
       }
     };
     if(openCamBtnDesktop) openCamBtnDesktop.onclick = openCamera;
@@ -629,10 +672,9 @@
         addPage(img);
         stopCamera();
       };
-      img.src = tempCanvas.toDataURL('image/jpeg');
+      img.src = tempCanvas.toDataURL('image/jpeg', 1.0); // Max quality capture
     };
 
-    // Mobile Bottom Sheet Toggle
     if(editToggleBtn) {
       editToggleBtn.onclick = () => {
         isControlsOpen = !isControlsOpen;
@@ -648,16 +690,16 @@
       };
     }
 
-
     // --- Core Application Logic ---
 
     function addPage(imgElement) {
       const pageData = {
         img: imgElement,
-        filter: 'magic_color', // Default
-        brightness: 10,
-        contrast: 25,
+        filter: 'pencil_enhance', // Default to new pencil filter
+        brightness: 20, // Default slightly whiten background
+        contrast: 40,   // Default high contrast to darken pencil
         threshold: 128,
+        sharpness: 50,  // Default moderate sharpening
         rotation: 0
       };
       pages.push(pageData);
@@ -672,7 +714,6 @@
       if(hasPages) {
         emptyState.style.display = 'none';
         canvasWrapper.style.display = 'flex';
-        // Show edit button on mobile if pages exist
         if(window.innerWidth <= 768) {
             editToggleBtn.style.display = 'flex';
         }
@@ -685,14 +726,13 @@
       }
     }
 
-    // Window resize handler to manage edit button visibility
     window.addEventListener('resize', () => {
        if(pages.length > 0 && window.innerWidth <= 768) {
            editToggleBtn.style.display = 'flex';
        } else {
            editToggleBtn.style.display = 'none';
            if(window.innerWidth > 768) {
-               controlsPanel.classList.remove('open'); // Ensure it resets for desktop view
+               controlsPanel.classList.remove('open');
                isControlsOpen = false;
            }
        }
@@ -709,18 +749,41 @@
       sliderBrightness.value = p.brightness;
       sliderContrast.value = p.contrast;
       sliderThreshold.value = p.threshold;
+      sliderSharpness.value = p.sharpness;
+      
       valBrightness.textContent = p.brightness;
       valContrast.textContent = p.contrast;
       valThreshold.textContent = p.threshold;
+      valSharpness.textContent = p.sharpness;
 
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.filter === p.filter);
       });
+      
+      // Toggle UI elements based on filter
+      thresholdGroup.style.display = p.filter === 'magic_bw' ? 'flex' : 'none';
+      sharpnessGroup.style.display = p.filter !== 'original' ? 'flex' : 'none';
 
-      processAndDraw();
+      queueProcessAndDraw();
     }
 
-    // Image Processing
+    // Debounce processing to prevent UI lockup while dragging sliders
+    function queueProcessAndDraw() {
+        if(processTimeout) clearTimeout(processTimeout);
+        
+        // Show loading if processing might take time (on large images)
+        loadingOverlay.style.display = 'flex';
+        
+        processTimeout = setTimeout(() => {
+            requestAnimationFrame(() => {
+                processAndDraw();
+                loadingOverlay.style.display = 'none';
+            });
+        }, 150); // 150ms debounce
+    }
+
+    // --- Image Processing Engine ---
+
     function processAndDraw() {
       if (activeIndex < 0) return;
       const p = pages[activeIndex];
@@ -730,8 +793,8 @@
       const w = isRotated ? img.height : img.width;
       const h = isRotated ? img.width : img.height;
 
-      // Downscale canvas for performance during editing if image is huge
-      const MAX_DIM = 2000;
+      // Render scale for editor (keep high quality for pencil details)
+      const MAX_DIM = 1600; 
       let scale = 1;
       if (w > MAX_DIM || h > MAX_DIM) {
           scale = Math.min(MAX_DIM/w, MAX_DIM/h);
@@ -750,18 +813,28 @@
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();
 
+      // If original, skip heavy processing
+      if(p.filter === 'original') {
+          updateActiveThumbnail();
+          return;
+      }
+
       let imageData = ctx.getImageData(0, 0, targetW, targetH);
       let pixels = imageData.data;
 
-      if (p.filter === 'sharpen') {
-        imageData = applySharpen(ctx, imageData);
-        pixels = imageData.data;
-      }
-
+      // 1. First pass: Apply contrast and brightness adjustments globally
       const b = parseInt(p.brightness);
       const c = parseInt(p.contrast);
+      // Enhance contrast curve significantly for pencil lines
       const contrastFactor = (259 * (c + 255)) / (255 * (259 - c));
       const thresh = parseInt(p.threshold);
+      
+      // Pre-calculate lookup tables for speed
+      const contrastLUT = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) {
+          let val = contrastFactor * (i + b - 128) + 128;
+          contrastLUT[i] = Math.min(255, Math.max(0, val));
+      }
 
       for (let i = 0; i < pixels.length; i += 4) {
         let r = pixels[i];
@@ -770,8 +843,30 @@
 
         let luma = 0.299 * r + 0.587 * g + 0.114 * bVal;
 
-        if (p.filter === 'magic_color') {
-          let maxRGB = Math.max(r, g, bVal);
+        if (p.filter === 'pencil_enhance') {
+          // PENCIL ENHANCER ALGORITHM
+          // 1. Convert to grayscale first (pencil is usually graphite)
+          r = g = bVal = luma;
+          
+          // 2. Adaptive Background Whitening & Line Darkening
+          // If it's a lighter pixel (likely paper), push it closer to white
+          if (luma > 140) {
+              // Flatten background noise
+              let paperBoost = Math.min(255, luma + ((255 - luma) * 0.5));
+              r = g = bVal = paperBoost;
+          } else {
+              // Darken the pencil graphite significantly (gamma correction style)
+              // The darker it is, the darker we make it to extract light strokes
+              let darkenFactor = Math.pow(luma / 255, 1.2) * 255; 
+              r = g = bVal = Math.max(0, darkenFactor - 30); // Extra boost
+          }
+          
+          // 3. Apply user contrast/brightness
+          r = contrastLUT[Math.floor(r)];
+          g = contrastLUT[Math.floor(g)];
+          bVal = contrastLUT[Math.floor(bVal)];
+
+        } else if (p.filter === 'magic_color') {
           if (luma > 150) {
             r = Math.min(255, r * 1.25 + 20);
             g = Math.min(255, g * 1.25 + 20);
@@ -781,71 +876,91 @@
             g = Math.max(0, g * 0.85);
             bVal = Math.max(0, bVal * 0.85);
           }
+          r = contrastLUT[r]; g = contrastLUT[g]; bVal = contrastLUT[bVal];
+
         } else if (p.filter === 'magic_bw') {
           let val = luma >= thresh ? 255 : 0;
           r = g = bVal = val;
-        } else if (p.filter === 'grayscale') {
-          r = g = bVal = luma;
-        } else if (p.filter === 'lighten') {
-          r = Math.min(255, r + 40);
-          g = Math.min(255, g + 40);
-          bVal = Math.min(255, bVal + 40);
+        } else if (p.filter === 'sharpen') {
+           r = contrastLUT[r]; g = contrastLUT[g]; bVal = contrastLUT[bVal];
         }
 
-        if (p.filter !== 'magic_bw') {
-          r = contrastFactor * (r + b - 128) + 128;
-          g = contrastFactor * (g + b - 128) + 128;
-          bVal = contrastFactor * (bVal + b - 128) + 128;
-        }
+        pixels[i] = r;
+        pixels[i + 1] = g;
+        pixels[i + 2] = bVal;
+      }
 
-        pixels[i] = Math.min(255, Math.max(0, r));
-        pixels[i + 1] = Math.min(255, Math.max(0, g));
-        pixels[i + 2] = Math.min(255, Math.max(0, bVal));
+      // 2. Second pass: Spatial filtering (Sharpening / Local Contrast)
+      const sharpnessAmount = parseInt(p.sharpness);
+      if (sharpnessAmount > 0 && p.filter !== 'magic_bw') {
+          // Apply unsharp mask logic via convolution
+          imageData = applyVariableSharpen(imageData, targetW, targetH, sharpnessAmount);
       }
 
       ctx.putImageData(imageData, 0, 0);
       updateActiveThumbnail();
     }
 
-    function applySharpen(ctx, imageData) {
-      const w = imageData.width;
-      const h = imageData.height;
+    function applyVariableSharpen(imageData, w, h, amount) {
+      // Amount from 0 to 100
+      const strength = amount / 50.0; // 0 to 2.0
+      if (strength <= 0) return imageData;
+
       const src = imageData.data;
-      const output = ctx.createImageData(w, h);
+      const output = new ImageData(new Uint8ClampedArray(src), w, h);
       const dst = output.data;
 
-      const kernel = [ 0, -1,  0, -1,  5, -1, 0, -1,  0 ];
+      // 3x3 Laplacian edge enhancement matrix
+      const centerWeight = 1 + (4 * strength);
+      const edgeWeight = -strength;
 
       for (let y = 1; y < h - 1; y++) {
         for (let x = 1; x < w - 1; x++) {
-          let r = 0, g = 0, b = 0;
-          for (let ky = -1; ky <= 1; ky++) {
-            for (let kx = -1; kx <= 1; kx++) {
-              const px = (y + ky) * w + (x + kx);
-              const weight = kernel[(ky + 1) * 3 + (kx + 1)];
-              r += src[px * 4] * weight;
-              g += src[px * 4 + 1] * weight;
-              b += src[px * 4 + 2] * weight;
-            }
-          }
+          
+          // Calculate index positions
           const idx = (y * w + x) * 4;
-          dst[idx] = Math.min(255, Math.max(0, r));
-          dst[idx + 1] = Math.min(255, Math.max(0, g));
-          dst[idx + 2] = Math.min(255, Math.max(0, b));
-          dst[idx + 3] = 255;
+          const idxT = ((y-1) * w + x) * 4;
+          const idxB = ((y+1) * w + x) * 4;
+          const idxL = (y * w + (x-1)) * 4;
+          const idxR = (y * w + (x+1)) * 4;
+
+          for (let c = 0; c < 3; c++) {
+              let val = 
+                  src[idx + c] * centerWeight +
+                  src[idxT + c] * edgeWeight +
+                  src[idxB + c] * edgeWeight +
+                  src[idxL + c] * edgeWeight +
+                  src[idxR + c] * edgeWeight;
+              
+              dst[idx + c] = Math.min(255, Math.max(0, val));
+          }
         }
       }
       return output;
     }
 
-    // Controls Events
+    // --- Event Listeners ---
+
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.onclick = () => {
         if (activeIndex < 0) return;
-        pages[activeIndex].filter = btn.dataset.filter;
-        if (btn.dataset.filter === 'magic_bw') {
+        
+        const filterType = btn.dataset.filter;
+        pages[activeIndex].filter = filterType;
+        
+        // Auto-adjust presets based on filter selected
+        if (filterType === 'pencil_enhance') {
           pages[activeIndex].contrast = 40;
+          pages[activeIndex].brightness = 20;
+          pages[activeIndex].sharpness = 50;
+        } else if (filterType === 'magic_bw') {
+          pages[activeIndex].contrast = 0;
+        } else if (filterType === 'original') {
+          pages[activeIndex].contrast = 0;
+          pages[activeIndex].brightness = 0;
+          pages[activeIndex].sharpness = 0;
         }
+        
         loadActivePage();
       };
     });
@@ -854,7 +969,7 @@
       valBrightness.textContent = e.target.value;
       if (activeIndex >= 0) {
         pages[activeIndex].brightness = e.target.value;
-        processAndDraw();
+        queueProcessAndDraw();
       }
     };
 
@@ -862,7 +977,7 @@
       valContrast.textContent = e.target.value;
       if (activeIndex >= 0) {
         pages[activeIndex].contrast = e.target.value;
-        processAndDraw();
+        queueProcessAndDraw();
       }
     };
 
@@ -870,23 +985,33 @@
       valThreshold.textContent = e.target.value;
       if (activeIndex >= 0) {
         pages[activeIndex].threshold = e.target.value;
-        processAndDraw();
+        queueProcessAndDraw();
       }
     };
+
+    sliderSharpness.oninput = (e) => {
+      valSharpness.textContent = e.target.value;
+      if (activeIndex >= 0) {
+        pages[activeIndex].sharpness = e.target.value;
+        queueProcessAndDraw();
+      }
+    };
+
 
     document.getElementById('rotateLeftBtn').onclick = () => {
       if (activeIndex < 0) return;
       pages[activeIndex].rotation = (pages[activeIndex].rotation - 90 + 360) % 360;
-      processAndDraw();
+      loadActivePage();
     };
 
     document.getElementById('rotateRightBtn').onclick = () => {
       if (activeIndex < 0) return;
       pages[activeIndex].rotation = (pages[activeIndex].rotation + 90) % 360;
-      processAndDraw();
+      loadActivePage();
     };
 
-    // Thumbnails
+    // --- Thumbnails & Export ---
+
     function renderThumbnails() {
       thumbBar.innerHTML = '';
       pages.forEach((p, idx) => {
@@ -894,7 +1019,7 @@
         card.className = `thumb-card ${idx === activeIndex ? 'active' : ''}`;
         
         const img = document.createElement('img');
-        img.src = p.img.src; // Init with original, updated later
+        img.src = p.img.src; 
         
         const badge = document.createElement('span');
         badge.className = 'badge';
@@ -917,7 +1042,7 @@
       const activeCard = thumbBar.children[activeIndex];
       if (activeCard) {
         const img = activeCard.querySelector('img');
-        img.src = mainCanvas.toDataURL('image/jpeg', 0.2); // Low quality for thumbnail
+        img.src = mainCanvas.toDataURL('image/jpeg', 0.2); 
       }
     }
 
@@ -930,53 +1055,53 @@
       }
     };
 
-    // PDF Export
     exportPdfBtn.onclick = () => {
       if (pages.length === 0) {
         alert('Please add at least one scanned image before exporting.');
         return;
       }
 
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4'
-      });
+      // Show loading during PDF generation
+      loadingOverlay.querySelector('span').textContent = "Generating PDF...";
+      loadingOverlay.style.display = 'flex';
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      setTimeout(() => {
+          const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const originalIndex = activeIndex;
 
-      // Save current active index to restore later
-      const originalIndex = activeIndex;
+          pages.forEach((p, i) => {
+            if (i > 0) pdf.addPage();
+            
+            activeIndex = i;
+            processAndDraw(); // Process at view resolution (sufficient for standard PDFs)
+            const imgData = mainCanvas.toDataURL('image/jpeg', 0.85); // Compress for PDF size
 
-      pages.forEach((p, i) => {
-        if (i > 0) pdf.addPage();
-        
-        activeIndex = i;
-        processAndDraw(); // Re-render at full resolution (based on our scale logic)
-        const imgData = mainCanvas.toDataURL('image/jpeg', 0.95);
+            const imgProps = pdf.getImageProperties(imgData);
+            const ratio = imgProps.width / imgProps.height;
+            let printW = pdfWidth;
+            let printH = pdfWidth / ratio;
 
-        const imgProps = pdf.getImageProperties(imgData);
-        const ratio = imgProps.width / imgProps.height;
-        let printW = pdfWidth;
-        let printH = pdfWidth / ratio;
+            if (printH > pdfHeight) {
+              printH = pdfHeight;
+              printW = pdfHeight * ratio;
+            }
 
-        if (printH > pdfHeight) {
-          printH = pdfHeight;
-          printW = pdfHeight * ratio;
-        }
+            const xOffset = (pdfWidth - printW) / 2;
+            const yOffset = (pdfHeight - printH) / 2;
 
-        const xOffset = (pdfWidth - printW) / 2;
-        const yOffset = (pdfHeight - printH) / 2;
+            pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
+          });
 
-        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
-      });
-
-      // Restore view
-      activeIndex = originalIndex;
-      loadActivePage();
-
-      pdf.save(`DocScan_${new Date().getTime()}.pdf`);
+          activeIndex = originalIndex;
+          loadActivePage();
+          
+          pdf.save(`Scanned_Notes_${new Date().getTime()}.pdf`);
+          
+          loadingOverlay.style.display = 'none';
+          loadingOverlay.querySelector('span').textContent = "Processing...";
+      }, 100);
     };
 
     // Initial state
