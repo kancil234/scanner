@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DocScan Pro - CamScanner Web App</title>
-  <!-- jsPDF CDN for PDF export -->
+  <!-- Added maximum-scale=1.0 and user-scalable=no to prevent zooming issues on mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>DocScan Pro - Mobile</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- FontAwesome for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   
   <style>
@@ -28,6 +27,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh; /* Mobile viewport height fix */
       overflow: hidden;
     }
 
@@ -39,6 +39,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      z-index: 10;
     }
 
     .logo {
@@ -48,6 +49,11 @@
       font-weight: 700;
       font-size: 1.25rem;
       color: #38bdf8;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
     }
 
     .btn {
@@ -62,6 +68,7 @@
       align-items: center;
       gap: 8px;
       transition: 0.2s ease;
+      font-size: 0.9rem;
     }
 
     .btn:hover { background: var(--accent-hover); }
@@ -71,16 +78,18 @@
     .btn-success:hover { background: #047857; }
     .btn-danger { background: #dc2626; }
     .btn-danger:hover { background: #b91c1c; }
+    .btn-icon-only { padding: 8px 12px; }
 
     /* Layout */
     .app-container {
       display: flex;
       flex: 1;
       overflow: hidden;
+      position: relative;
     }
 
-    /* Left Sidebar - Capture & Controls */
-    .sidebar {
+    /* Sidebar / Bottom Sheet for Controls */
+    .controls-panel {
       width: 320px;
       background: var(--bg-card);
       border-right: 1px solid var(--border);
@@ -89,6 +98,8 @@
       flex-direction: column;
       gap: 20px;
       overflow-y: auto;
+      transition: transform 0.3s ease;
+      z-index: 5;
     }
 
     .section-title {
@@ -105,22 +116,31 @@
       gap: 8px;
     }
 
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
+    .filter-scroll {
+      display: flex;
       gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      /* hide scrollbar */
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar {
+      display: none;
     }
 
     .filter-btn {
       background: #26334d;
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 10px;
+      padding: 8px 12px;
       border-radius: 6px;
       cursor: pointer;
       text-align: center;
       font-size: 0.85rem;
       transition: 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .filter-btn.active, .filter-btn:hover {
@@ -153,7 +173,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 10px;
       background: #0f172a;
       position: relative;
       overflow: auto;
@@ -161,8 +181,8 @@
 
     .canvas-wrapper {
       max-width: 100%;
-      max-height: 80vh;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      max-height: 100%;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
       border-radius: 4px;
       overflow: hidden;
       display: flex;
@@ -172,27 +192,28 @@
 
     canvas {
       max-width: 100%;
-      max-height: 80vh;
+      max-height: 100%;
       display: block;
       object-fit: contain;
     }
 
     /* Bottom Thumbnail Carousel */
     .thumbnails-bar {
-      height: 110px;
+      height: 90px;
       background: var(--bg-card);
       border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 10px 20px;
+      padding: 10px 15px;
       gap: 12px;
       overflow-x: auto;
+      z-index: 10;
     }
 
     .thumb-card {
       position: relative;
-      height: 80px;
-      width: 60px;
+      height: 60px;
+      width: 45px;
       border: 2px solid transparent;
       border-radius: 4px;
       overflow: hidden;
@@ -214,7 +235,7 @@
       bottom: 2px;
       right: 2px;
       background: rgba(0,0,0,0.7);
-      font-size: 0.65rem;
+      font-size: 0.55rem;
       padding: 2px 4px;
       border-radius: 2px;
     }
@@ -224,7 +245,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -233,17 +254,160 @@
     }
 
     .modal video {
-      max-width: 90%;
-      max-height: 70vh;
-      border-radius: 8px;
+      max-width: 100%;
+      max-height: 80vh;
       background: #000;
+    }
+
+    .camera-controls {
+      display: flex;
+      gap: 16px;
+      position: absolute;
+      bottom: 30px;
+    }
+
+    .capture-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      border: 4px solid white;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .capture-btn:active {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .close-cam-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
     }
 
     .empty-state {
       text-align: center;
       color: var(--text-muted);
+      padding: 20px;
     }
-    .empty-state i { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state i { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; color: #38bdf8; }
+    .empty-state p { margin-top: 10px; font-size: 0.9rem; max-width: 250px; line-height: 1.4; }
+
+    /* Mobile Floating Action Button (FAB) */
+    .mobile-fab-container {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .fab {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+    .fab.secondary {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-card);
+      color: var(--text);
+      font-size: 1.2rem;
+      align-self: flex-end;
+    }
+
+    /* Edit Toggle for Mobile */
+    .edit-toggle-btn {
+      display: none;
+    }
+
+    /* ========================================= */
+    /* Responsive Design for Mobile (max-width: 768px) */
+    /* ========================================= */
+    @media (max-width: 768px) {
+      header {
+        padding: 10px 15px;
+      }
+      
+      .header-actions .btn-text { display: none; } /* Hide text on header buttons */
+      .header-actions .btn { padding: 8px 12px; }
+
+      .app-container {
+        flex-direction: column-reverse; /* Preview on top, controls on bottom when open */
+      }
+
+      /* Make sidebar act as a bottom sheet for controls */
+      .controls-panel {
+        width: 100%;
+        height: 45vh;
+        border-right: none;
+        border-top: 1px solid var(--border);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        transform: translateY(100%); /* Hidden by default on mobile */
+        padding: 15px;
+        gap: 15px;
+      }
+
+      .controls-panel.open {
+        transform: translateY(0);
+      }
+
+      .preview-area {
+        padding-bottom: 20px;
+      }
+
+      .edit-toggle-btn {
+        display: flex; /* Show edit toggle button on mobile */
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+        border-radius: 20px;
+        padding: 8px 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      }
+
+      /* Hide capture buttons from sidebar on mobile, use FABs instead */
+      .controls-panel > div:first-child {
+        display: none;
+      }
+
+      .mobile-fab-container {
+        display: flex; /* Show FABs on mobile */
+      }
+      
+      /* Adjust thumbnails bar for mobile */
+      .thumbnails-bar {
+        padding: 8px 10px;
+        height: 80px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -253,38 +417,43 @@
       <i class="fa-solid fa-file-contract"></i>
       <span>DocScan Pro</span>
     </div>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn btn-secondary" id="clearAllBtn"><i class="fa-solid fa-trash"></i> Clear All</button>
-      <button class="btn btn-success" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+    <div class="header-actions">
+      <button class="btn btn-secondary btn-icon-only" id="clearAllBtn" title="Clear All">
+        <i class="fa-solid fa-trash"></i> <span class="btn-text">Clear</span>
+      </button>
+      <button class="btn btn-success" id="exportPdfBtn" title="Download PDF">
+        <i class="fa-solid fa-file-pdf"></i> <span class="btn-text">Export PDF</span>
+      </button>
     </div>
   </header>
 
   <div class="app-container">
-    <!-- Sidebar Controls -->
-    <aside class="sidebar">
+    
+    <!-- Controls Panel (Bottom Sheet on Mobile, Sidebar on Desktop) -->
+    <aside class="controls-panel" id="controlsPanel">
+      <!-- Hidden on mobile, shown on desktop -->
       <div>
         <div class="section-title">1. Capture / Upload</div>
         <div class="input-group">
-          <button class="btn" id="openCamBtn"><i class="fa-solid fa-camera"></i> Take Photo</button>
-          <button class="btn btn-secondary" id="uploadBtn"><i class="fa-solid fa-upload"></i> Upload Image(s)</button>
-          <input type="file" id="fileInput" accept="image/*" multiple hidden />
+          <button class="btn" id="openCamBtnDesktop"><i class="fa-solid fa-camera"></i> Take Photo</button>
+          <button class="btn btn-secondary" id="uploadBtnDesktop"><i class="fa-solid fa-upload"></i> Upload Image</button>
         </div>
       </div>
 
       <div>
-        <div class="section-title">2. Preset Filters</div>
-        <div class="filter-grid">
-          <button class="filter-btn active" data-filter="original">Original</button>
-          <button class="filter-btn" data-filter="magic_color">✨ Magic Color</button>
+        <div class="section-title">Filters</div>
+        <div class="filter-scroll">
+          <button class="filter-btn active" data-filter="magic_color">✨ Magic Color</button>
           <button class="filter-btn" data-filter="magic_bw">📄 Magic Pro B&W</button>
-          <button class="filter-btn" data-filter="sharpen">🔍 De-blur / Clear</button>
+          <button class="filter-btn" data-filter="sharpen">🔍 Sharpen</button>
+          <button class="filter-btn" data-filter="original">Original</button>
           <button class="filter-btn" data-filter="grayscale">Grayscale</button>
-          <button class="filter-btn" data-filter="lighten">Lighten Background</button>
+          <button class="filter-btn" data-filter="lighten">Lighten</button>
         </div>
       </div>
 
       <div>
-        <div class="section-title">3. Fine Adjustments</div>
+        <div class="section-title">Adjustments</div>
         <div class="input-group">
           <div class="slider-group">
             <label>Brightness <span id="valBrightness">0</span></label>
@@ -302,7 +471,7 @@
       </div>
 
       <div>
-        <div class="section-title">4. Transformations</div>
+        <div class="section-title">Rotate</div>
         <div style="display: flex; gap: 8px;">
           <button class="btn btn-secondary" style="flex:1" id="rotateLeftBtn"><i class="fa-solid fa-rotate-left"></i> -90°</button>
           <button class="btn btn-secondary" style="flex:1" id="rotateRightBtn"><i class="fa-solid fa-rotate-right"></i> +90°</button>
@@ -314,13 +483,31 @@
     <main class="preview-area">
       <div id="emptyState" class="empty-state">
         <i class="fa-solid fa-scanner"></i>
-        <h2>No Document Loaded</h2>
-        <p>Use the sidebar to snap a photo or upload document images.</p>
+        <h2>Tap to Scan</h2>
+        <p>Use the camera or upload images to start creating your document.</p>
       </div>
 
       <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
         <canvas id="mainCanvas"></canvas>
       </div>
+
+      <!-- Mobile Edit Toggle -->
+      <button class="btn btn-secondary edit-toggle-btn" id="editToggleBtn" style="display: none;">
+        <i class="fa-solid fa-sliders"></i> Adjust Page
+      </button>
+
+      <!-- Mobile FABs for capturing -->
+      <div class="mobile-fab-container" id="mobileFabs">
+        <button class="fab secondary" id="uploadBtnMobile" title="Upload Image">
+          <i class="fa-solid fa-image"></i>
+        </button>
+        <button class="fab" id="openCamBtnMobile" title="Take Photo">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+      </div>
+      
+      <!-- Shared File Input -->
+      <input type="file" id="fileInput" accept="image/*" multiple hidden />
     </main>
   </div>
 
@@ -329,10 +516,10 @@
 
   <!-- Camera Modal -->
   <div class="modal" id="camModal">
+    <button class="close-cam-btn" id="closeCamBtn"><i class="fa-solid fa-xmark"></i></button>
     <video id="webcamVideo" autoplay playsinline></video>
-    <div style="display: flex; gap: 12px;">
-      <button class="btn btn-success" id="captureSnapBtn"><i class="fa-solid fa-circle-dot"></i> Capture</button>
-      <button class="btn btn-danger" id="closeCamBtn">Close</button>
+    <div class="camera-controls">
+      <button class="capture-btn" id="captureSnapBtn"></button>
     </div>
   </div>
 
@@ -340,22 +527,38 @@
     const { jsPDF } = window.jspdf;
 
     // State management
-    let pages = []; // Array of objects { originalImg, filter, brightness, contrast, threshold, rotation }
+    let pages = []; 
     let activeIndex = -1;
+    let isControlsOpen = false; // Mobile bottom sheet state
 
     // DOM Elements
     const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const openCamBtn = document.getElementById('openCamBtn');
+
+    // Capture Buttons (Desktop & Mobile)
+    const uploadBtnDesktop = document.getElementById('uploadBtnDesktop');
+    const openCamBtnDesktop = document.getElementById('openCamBtnDesktop');
+    const uploadBtnMobile = document.getElementById('uploadBtnMobile');
+    const openCamBtnMobile = document.getElementById('openCamBtnMobile');
+
+    // Mobile UI specific
+    const editToggleBtn = document.getElementById('editToggleBtn');
+    const controlsPanel = document.getElementById('controlsPanel');
+    const mobileFabs = document.getElementById('mobileFabs');
+
+    // Camera UI
     const camModal = document.getElementById('camModal');
     const webcamVideo = document.getElementById('webcamVideo');
     const captureSnapBtn = document.getElementById('captureSnapBtn');
     const closeCamBtn = document.getElementById('closeCamBtn');
+
+    // Canvas & Preview
     const mainCanvas = document.getElementById('mainCanvas');
     const ctx = mainCanvas.getContext('2d');
     const canvasWrapper = document.getElementById('canvasWrapper');
     const emptyState = document.getElementById('emptyState');
     const thumbBar = document.getElementById('thumbBar');
+
+    // Actions
     const exportPdfBtn = document.getElementById('exportPdfBtn');
     const clearAllBtn = document.getElementById('clearAllBtn');
 
@@ -369,8 +572,13 @@
 
     let stream = null;
 
-    // File Upload Handler
-    uploadBtn.onclick = () => fileInput.click();
+    // --- Initialization & UI Binding ---
+
+    // Handle Uploads
+    const triggerUpload = () => fileInput.click();
+    if(uploadBtnDesktop) uploadBtnDesktop.onclick = triggerUpload;
+    if(uploadBtnMobile) uploadBtnMobile.onclick = triggerUpload;
+
     fileInput.onchange = (e) => {
       const files = Array.from(e.target.files);
       files.forEach(file => {
@@ -385,25 +593,29 @@
       fileInput.value = '';
     };
 
-    // Camera Handler
-    openCamBtn.onclick = async () => {
+    // Handle Camera
+    const openCamera = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: "environment" }, 
+          audio: false 
+        });
         webcamVideo.srcObject = stream;
         camModal.style.display = 'flex';
       } catch (err) {
         alert("Camera access denied or not available on your device.");
       }
     };
+    if(openCamBtnDesktop) openCamBtnDesktop.onclick = openCamera;
+    if(openCamBtnMobile) openCamBtnMobile.onclick = openCamera;
 
-    closeCamBtn.onclick = stopCamera;
-
-    function stopCamera() {
+    const stopCamera = () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
       camModal.style.display = 'none';
-    }
+    };
+    closeCamBtn.onclick = stopCamera;
 
     captureSnapBtn.onclick = () => {
       const tempCanvas = document.createElement('canvas');
@@ -420,11 +632,29 @@
       img.src = tempCanvas.toDataURL('image/jpeg');
     };
 
-    // Page Management
+    // Mobile Bottom Sheet Toggle
+    if(editToggleBtn) {
+      editToggleBtn.onclick = () => {
+        isControlsOpen = !isControlsOpen;
+        if(isControlsOpen) {
+          controlsPanel.classList.add('open');
+          editToggleBtn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
+          editToggleBtn.classList.replace('btn-secondary', 'btn-success');
+        } else {
+          controlsPanel.classList.remove('open');
+          editToggleBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Adjust Page';
+          editToggleBtn.classList.replace('btn-success', 'btn-secondary');
+        }
+      };
+    }
+
+
+    // --- Core Application Logic ---
+
     function addPage(imgElement) {
       const pageData = {
         img: imgElement,
-        filter: 'magic_color', // Default filter like CamScanner
+        filter: 'magic_color', // Default
         brightness: 10,
         contrast: 25,
         threshold: 128,
@@ -434,16 +664,46 @@
       activeIndex = pages.length - 1;
       renderThumbnails();
       loadActivePage();
+      updateUIState();
     }
+
+    function updateUIState() {
+      const hasPages = pages.length > 0;
+      if(hasPages) {
+        emptyState.style.display = 'none';
+        canvasWrapper.style.display = 'flex';
+        // Show edit button on mobile if pages exist
+        if(window.innerWidth <= 768) {
+            editToggleBtn.style.display = 'flex';
+        }
+      } else {
+        emptyState.style.display = 'block';
+        canvasWrapper.style.display = 'none';
+        editToggleBtn.style.display = 'none';
+        controlsPanel.classList.remove('open');
+        isControlsOpen = false;
+      }
+    }
+
+    // Window resize handler to manage edit button visibility
+    window.addEventListener('resize', () => {
+       if(pages.length > 0 && window.innerWidth <= 768) {
+           editToggleBtn.style.display = 'flex';
+       } else {
+           editToggleBtn.style.display = 'none';
+           if(window.innerWidth > 768) {
+               controlsPanel.classList.remove('open'); // Ensure it resets for desktop view
+               isControlsOpen = false;
+           }
+       }
+    });
 
     function loadActivePage() {
       if (activeIndex < 0 || activeIndex >= pages.length) {
-        emptyState.style.display = 'block';
-        canvasWrapper.style.display = 'none';
+        updateUIState();
         return;
       }
-      emptyState.style.display = 'none';
-      canvasWrapper.style.display = 'flex';
+      updateUIState();
 
       const p = pages[activeIndex];
       sliderBrightness.value = p.brightness;
@@ -453,7 +713,6 @@
       valContrast.textContent = p.contrast;
       valThreshold.textContent = p.threshold;
 
-      // Update filter UI buttons
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.filter === p.filter);
       });
@@ -461,32 +720,39 @@
       processAndDraw();
     }
 
-    // Image Processing Engine
+    // Image Processing
     function processAndDraw() {
       if (activeIndex < 0) return;
       const p = pages[activeIndex];
       const img = p.img;
 
-      // Calculate canvas dimensions considering rotation
       const isRotated = (p.rotation / 90) % 2 !== 0;
       const w = isRotated ? img.height : img.width;
       const h = isRotated ? img.width : img.height;
 
-      mainCanvas.width = w;
-      mainCanvas.height = h;
+      // Downscale canvas for performance during editing if image is huge
+      const MAX_DIM = 2000;
+      let scale = 1;
+      if (w > MAX_DIM || h > MAX_DIM) {
+          scale = Math.min(MAX_DIM/w, MAX_DIM/h);
+      }
+      
+      const targetW = Math.floor(w * scale);
+      const targetH = Math.floor(h * scale);
 
-      // Draw original rotated image to canvas
+      mainCanvas.width = targetW;
+      mainCanvas.height = targetH;
+
       ctx.save();
-      ctx.translate(w / 2, h / 2);
+      ctx.translate(targetW / 2, targetH / 2);
       ctx.rotate((p.rotation * Math.PI) / 180);
+      ctx.scale(scale, scale);
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();
 
-      // Read pixel data for manipulation
-      let imageData = ctx.getImageData(0, 0, w, h);
+      let imageData = ctx.getImageData(0, 0, targetW, targetH);
       let pixels = imageData.data;
 
-      // Apply convolution matrix if sharpening
       if (p.filter === 'sharpen') {
         imageData = applySharpen(ctx, imageData);
         pixels = imageData.data;
@@ -502,40 +768,30 @@
         let g = pixels[i + 1];
         let bVal = pixels[i + 2];
 
-        // 1. Grayscale luminance calculation
         let luma = 0.299 * r + 0.587 * g + 0.114 * bVal;
 
-        // 2. Filter-specific transformations
         if (p.filter === 'magic_color') {
-          // CamScanner Magic Color: boost white background, crisp dark text, enhance color saturation
           let maxRGB = Math.max(r, g, bVal);
-          let minRGB = Math.min(r, g, bVal);
-          
-          // Background whitening threshold
           if (luma > 150) {
             r = Math.min(255, r * 1.25 + 20);
             g = Math.min(255, g * 1.25 + 20);
             bVal = Math.min(255, bVal * 1.25 + 20);
           } else {
-            // Darken ink text
             r = Math.max(0, r * 0.85);
             g = Math.max(0, g * 0.85);
             bVal = Math.max(0, bVal * 0.85);
           }
         } else if (p.filter === 'magic_bw') {
-          // High-contrast clean Black & White
           let val = luma >= thresh ? 255 : 0;
           r = g = bVal = val;
         } else if (p.filter === 'grayscale') {
           r = g = bVal = luma;
         } else if (p.filter === 'lighten') {
-          // Whiten greyish camera shadows
           r = Math.min(255, r + 40);
           g = Math.min(255, g + 40);
           bVal = Math.min(255, bVal + 40);
         }
 
-        // 3. Brightness & Contrast fine tuning
         if (p.filter !== 'magic_bw') {
           r = contrastFactor * (r + b - 128) + 128;
           g = contrastFactor * (g + b - 128) + 128;
@@ -551,7 +807,6 @@
       updateActiveThumbnail();
     }
 
-    // 3x3 Sharpen Kernel convolution matrix
     function applySharpen(ctx, imageData) {
       const w = imageData.width;
       const h = imageData.height;
@@ -559,12 +814,7 @@
       const output = ctx.createImageData(w, h);
       const dst = output.data;
 
-      // Kernel: High-pass sharpening matrix
-      const kernel = [
-         0, -1,  0,
-        -1,  5, -1,
-         0, -1,  0
-      ];
+      const kernel = [ 0, -1,  0, -1,  5, -1, 0, -1,  0 ];
 
       for (let y = 1; y < h - 1; y++) {
         for (let x = 1; x < w - 1; x++) {
@@ -588,22 +838,18 @@
       return output;
     }
 
-    // Filter Buttons Listener
+    // Controls Events
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.onclick = () => {
         if (activeIndex < 0) return;
         pages[activeIndex].filter = btn.dataset.filter;
-        
-        // Auto-adjust default contrast for Magic Pro B&W
         if (btn.dataset.filter === 'magic_bw') {
           pages[activeIndex].contrast = 40;
         }
-        
         loadActivePage();
       };
     });
 
-    // Slider Event Listeners
     sliderBrightness.oninput = (e) => {
       valBrightness.textContent = e.target.value;
       if (activeIndex >= 0) {
@@ -628,7 +874,6 @@
       }
     };
 
-    // Rotation Listeners
     document.getElementById('rotateLeftBtn').onclick = () => {
       if (activeIndex < 0) return;
       pages[activeIndex].rotation = (pages[activeIndex].rotation - 90 + 360) % 360;
@@ -641,7 +886,7 @@
       processAndDraw();
     };
 
-    // Thumbnails & Carousel Rendering
+    // Thumbnails
     function renderThumbnails() {
       thumbBar.innerHTML = '';
       pages.forEach((p, idx) => {
@@ -649,7 +894,7 @@
         card.className = `thumb-card ${idx === activeIndex ? 'active' : ''}`;
         
         const img = document.createElement('img');
-        img.src = p.img.src;
+        img.src = p.img.src; // Init with original, updated later
         
         const badge = document.createElement('span');
         badge.className = 'badge';
@@ -672,20 +917,20 @@
       const activeCard = thumbBar.children[activeIndex];
       if (activeCard) {
         const img = activeCard.querySelector('img');
-        img.src = mainCanvas.toDataURL('image/jpeg', 0.5);
+        img.src = mainCanvas.toDataURL('image/jpeg', 0.2); // Low quality for thumbnail
       }
     }
 
     clearAllBtn.onclick = () => {
-      if (confirm('Are you sure you want to delete all scanned pages?')) {
+      if (confirm('Delete all scanned pages?')) {
         pages = [];
         activeIndex = -1;
         renderThumbnails();
-        loadActivePage();
+        updateUIState();
       }
     };
 
-    // PDF Export Engine
+    // PDF Export
     exportPdfBtn.onclick = () => {
       if (pages.length === 0) {
         alert('Please add at least one scanned image before exporting.');
@@ -701,12 +946,14 @@
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
+      // Save current active index to restore later
+      const originalIndex = activeIndex;
+
       pages.forEach((p, i) => {
         if (i > 0) pdf.addPage();
         
-        // Temporarily render each page canvas to data URL
         activeIndex = i;
-        processAndDraw();
+        processAndDraw(); // Re-render at full resolution (based on our scale logic)
         const imgData = mainCanvas.toDataURL('image/jpeg', 0.95);
 
         const imgProps = pdf.getImageProperties(imgData);
@@ -725,8 +972,15 @@
         pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
       });
 
-      pdf.save(`Scanned_Document_${new Date().toISOString().slice(0, 10)}.pdf`);
+      // Restore view
+      activeIndex = originalIndex;
+      loadActivePage();
+
+      pdf.save(`DocScan_${new Date().getTime()}.pdf`);
     };
+
+    // Initial state
+    updateUIState();
   </script>
 </body>
 </html>
