@@ -60,15 +60,20 @@
       scrollbar-width: none;
     }
 
-    /* Custom Range Sliders for Touch & Desktop */
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
+    /* Styled slim scrollbar for desktop filmstrip & grid */
+    .filmstrip-scroll::-webkit-scrollbar {
       height: 6px;
-      background: #29354f;
+    }
+    .filmstrip-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
       border-radius: 999px;
-      outline: none;
+    }
+    .filmstrip-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 999px;
+    }
+    .filmstrip-scroll::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
 
     input[type="range"]::-webkit-slider-thumb {
@@ -109,6 +114,17 @@
       }
     }
 
+    /* Drag & Drop Visual Feedback for Grid Outline Cards */
+    .grid-card.dragging {
+      opacity: 0.45;
+      transform: scale(0.97);
+    }
+    .grid-card.drag-over {
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+      transform: translateY(-2px);
+    }
+
     /* Spinner Animation */
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -121,28 +137,42 @@
 <body class="flex flex-col font-sans select-none">
 
   <!-- ==================== TOP NAVIGATION BAR ==================== -->
-  <header class="bg-cardDark border-b border-borderDark px-4 py-3 flex items-center justify-between z-20 shrink-0">
-    <div class="flex items-center gap-2.5">
+  <header class="bg-cardDark border-b border-borderDark px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2 z-20 shrink-0">
+    <div class="flex items-center gap-2.5 shrink-0">
       <div class="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-sky-400">
         <i class="fa-solid fa-file-signature text-lg"></i>
       </div>
       <div>
         <h1 class="font-bold text-base sm:text-lg tracking-tight text-white leading-tight">DocScan Pro</h1>
-        <p class="text-[11px] text-slate-400 hidden sm:block">Handwriting & Document Scanner</p>
+        <p class="text-[11px] text-slate-400 hidden lg:block">Laptop & Mobile Document Scanner</p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
+    <!-- Two Distinct View Mode Toggle Buttons -->
+    <div id="viewModeToggle" class="flex items-center bg-slateDark p-1 rounded-xl border border-borderDark">
+      <button id="singleViewBtn" type="button" title="Single Page & Filmstrip View"
+        class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow">
+        <i class="fa-solid fa-file-image"></i>
+        <span class="hidden sm:inline">Single Page</span>
+      </button>
+      <button id="gridViewBtn" type="button" title="Grid Outline & Reorder View"
+        class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-table-cells-large"></i>
+        <span class="hidden sm:inline">Grid Outline</span>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
       <button id="clearAllBtn" title="Clear All Pages"
         class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-sm font-medium transition flex items-center gap-2 border border-slate-700">
         <i class="fa-solid fa-trash text-rose-400"></i>
-        <span class="hidden sm:inline">Clear</span>
+        <span class="hidden md:inline">Clear</span>
       </button>
 
       <button id="openExportModalBtn" title="Share or Export PDF"
-        class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-blue-600/25">
-        <i class="fa-solid fa-share-nodes"></i>
-        <span>Share / Export PDF</span>
+        class="px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-blue-600/25">
+        <i class="fa-solid fa-file-export"></i>
+        <span>Export PDF</span>
       </button>
     </div>
   </header>
@@ -150,9 +180,9 @@
   <!-- ==================== MAIN WORKSPACE ==================== -->
   <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
 
-    <!-- ==================== CONTROLS PANEL (Desktop Sidebar / Mobile Bottom Sheet) ==================== -->
+    <!-- ==================== CONTROLS PANEL (Laptop Left Sidebar / Mobile Bottom Sheet) ==================== -->
     <aside id="controlsPanel"
-      class="fixed md:static inset-x-0 bottom-0 z-30 md:z-10 w-full md:w-80 lg:w-88 max-h-[68dvh] md:max-h-none bg-cardDark border-t md:border-t-0 md:border-r border-borderDark rounded-t-2xl md:rounded-none flex flex-col shadow-2xl md:shadow-none">
+      class="fixed md:static inset-x-0 bottom-0 z-30 md:z-10 w-full md:w-80 lg:w-88 max-h-[70dvh] md:max-h-none bg-cardDark border-t md:border-t-0 md:border-r border-borderDark rounded-t-2xl md:rounded-none flex flex-col shadow-2xl md:shadow-none shrink-0">
 
       <!-- Mobile Sheet Handle Header -->
       <div class="md:hidden flex items-center justify-between px-4 pt-3 pb-2 border-b border-borderDark/70 shrink-0">
@@ -168,17 +198,20 @@
       <!-- Scrollable Controls Body -->
       <div class="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1">
 
-        <!-- Desktop Capture / Upload Section (Hidden on Mobile, replaced by FABs) -->
+        <!-- Laptop/Desktop Capture & Upload Section (Always accessible on laptop) -->
         <div class="hidden md:block space-y-2.5">
-          <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">1. Capture & Upload</div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">1. Capture & Upload</span>
+            <span class="text-[10px] text-slate-500">or drop files</span>
+          </div>
           <div class="grid grid-cols-2 gap-2.5">
             <button id="openCamBtnDesktop"
               class="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold transition flex items-center justify-center gap-2 shadow-md shadow-blue-600/20">
-              <i class="fa-solid fa-camera"></i> Camera
+              <i class="fa-solid fa-camera"></i> Webcam
             </button>
             <button id="uploadBtnDesktop"
               class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-100 text-sm font-semibold transition flex items-center justify-center gap-2 border border-slate-700">
-              <i class="fa-solid fa-images"></i> Upload
+              <i class="fa-solid fa-upload"></i> Upload
             </button>
           </div>
         </div>
@@ -292,17 +325,27 @@
     </aside>
 
     <!-- ==================== MAIN DOCUMENT PREVIEW STAGE ==================== -->
-    <main id="previewStage" class="flex-1 bg-slateDark relative flex flex-col items-center justify-center p-3 sm:p-6 overflow-hidden">
+    <main id="previewStage" class="flex-1 bg-slateDark relative flex flex-col overflow-hidden">
 
-      <!-- Empty State -->
-      <div id="emptyState" class="text-center max-w-sm mx-auto px-4 space-y-4">
+      <!-- Global Drag-and-Drop File Upload Overlay -->
+      <div id="fileDropOverlay"
+        class="hidden pointer-events-none absolute inset-3 rounded-2xl border-2 border-dashed border-sky-400 bg-blue-950/80 backdrop-blur-xs z-40 flex-col items-center justify-center gap-3 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-3xl">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Drop Images to Add Pages</h3>
+        <p class="text-xs text-slate-300">Supports PNG, JPG, WEBP, and multi-image selection</p>
+      </div>
+
+      <!-- Empty State (Visible in both views when no pages exist) -->
+      <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center max-w-md mx-auto px-4 space-y-4">
         <div class="w-20 h-20 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-sky-400">
           <i class="fa-solid fa-file-pen text-3xl"></i>
         </div>
         <div class="space-y-1.5">
           <h2 class="text-xl font-bold text-white">Scan Handwritten Notes</h2>
           <p class="text-sm text-slate-400 leading-relaxed">
-            Snap a photo of your notebook or upload existing photos to enhance faint pencil writing and share as a crisp PDF.
+            Snap a photo, drag &amp; drop files onto this window, or upload existing photos to enhance faint pencil writing and share as a crisp PDF.
           </p>
         </div>
         <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
@@ -317,39 +360,99 @@
         </div>
       </div>
 
-      <!-- Canvas Wrapper -->
-      <div id="canvasWrapper" class="hidden relative max-w-full max-h-full items-center justify-center rounded-lg overflow-hidden shadow-2xl border border-slate-800 bg-black">
-        <canvas id="mainCanvas" class="max-w-full max-h-[calc(100dvh-215px)] md:max-h-[calc(100dvh-195px)] w-auto h-auto object-contain block"></canvas>
+      <!-- ==================== VIEW MODE 1: SINGLE PAGE DETAIL + ALL PAGES FILMSTRIP ==================== -->
+      <div id="singlePageView" class="hidden flex-1 flex-col overflow-hidden">
+        <!-- Main Interactive Canvas Area -->
+        <div class="flex-1 relative flex items-center justify-center p-3 sm:p-5 overflow-hidden">
+          <!-- Previous Page Quick Navigation Arrow -->
+          <button id="prevPageNavBtn" type="button" title="Previous Page (Left Arrow Key)"
+            class="hidden sm:flex absolute left-4 z-10 w-10 h-10 rounded-full bg-slate-900/85 hover:bg-blue-600 disabled:opacity-30 disabled:pointer-events-none border border-slate-700 text-white items-center justify-center shadow-lg transition active:scale-90">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
 
-        <!-- Hold-to-Compare Original Badge -->
-        <button id="compareOriginalBtn" title="Press and hold to view original photo"
-          class="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 shadow-lg active:bg-blue-600 active:text-white">
-          <i class="fa-solid fa-eye"></i> <span>Hold: Original</span>
-        </button>
+          <!-- Canvas Wrapper -->
+          <div id="canvasWrapper" class="relative max-w-full max-h-full flex items-center justify-center rounded-lg overflow-hidden shadow-2xl border border-slate-800 bg-black">
+            <canvas id="mainCanvas" class="max-w-full max-h-[calc(100dvh-235px)] md:max-h-[calc(100dvh-215px)] w-auto h-auto object-contain block"></canvas>
 
-        <!-- Page Indicator Pill -->
-        <div id="pageCounterPill"
-          class="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-semibold">
-          Page 1 of 1
+            <!-- Hold-to-Compare Original Badge -->
+            <button id="compareOriginalBtn" title="Press and hold to view original photo"
+              class="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 shadow-lg active:bg-blue-600 active:text-white">
+              <i class="fa-solid fa-eye"></i> <span>Hold: Original</span>
+            </button>
+
+            <!-- Page Indicator Pill -->
+            <div id="pageCounterPill"
+              class="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-semibold">
+              Page 1 of 1
+            </div>
+
+            <!-- Processing Spinner Overlay -->
+            <div id="loadingOverlay"
+              class="hidden absolute inset-0 bg-slate-950/75 backdrop-blur-xs flex-col items-center justify-center gap-3 z-20">
+              <div class="w-10 h-10 rounded-full border-4 border-slate-600 border-t-blue-500 spinner"></div>
+              <span id="loadingText" class="text-sm font-medium text-white">Enhancing clarity...</span>
+            </div>
+          </div>
+
+          <!-- Next Page Quick Navigation Arrow -->
+          <button id="nextPageNavBtn" type="button" title="Next Page (Right Arrow Key)"
+            class="hidden sm:flex absolute right-4 z-10 w-10 h-10 rounded-full bg-slate-900/85 hover:bg-blue-600 disabled:opacity-30 disabled:pointer-events-none border border-slate-700 text-white items-center justify-center shadow-lg transition active:scale-90">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
         </div>
 
-        <!-- Processing Spinner Overlay -->
-        <div id="loadingOverlay"
-          class="hidden absolute inset-0 bg-slate-950/75 backdrop-blur-xs flex-col items-center justify-center gap-3 z-20">
-          <div class="w-10 h-10 rounded-full border-4 border-slate-600 border-t-blue-500 spinner"></div>
-          <span id="loadingText" class="text-sm font-medium text-white">Enhancing clarity...</span>
+        <!-- Bottom Filmstrip Bar Showing ALL Pages in Single Page View -->
+        <div id="filmstripSection" class="bg-cardDark border-t border-borderDark px-3 py-2 shrink-0 z-10 flex items-center gap-2">
+          <button id="filmstripPrevBtn" type="button" title="Previous Page"
+            class="w-8 h-14 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-35 disabled:pointer-events-none border border-slate-700 text-slate-200 flex items-center justify-center shrink-0 transition active:scale-90">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+
+          <div id="thumbBar" class="flex-1 flex items-center gap-2.5 overflow-x-auto filmstrip-scroll py-0.5">
+            <!-- All page thumbnails (P1, P2, P3...) rendered dynamically -->
+          </div>
+
+          <button id="filmstripNextBtn" type="button" title="Next Page"
+            class="w-8 h-14 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-35 disabled:pointer-events-none border border-slate-700 text-slate-200 flex items-center justify-center shrink-0 transition active:scale-90">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Mobile "Adjust Page" Toggle Pill -->
+      <!-- ==================== VIEW MODE 2: GRID OUTLINE VIEW (REORDER & MANAGE) ==================== -->
+      <div id="gridOutlineView" class="hidden flex-1 flex-col overflow-hidden">
+        <!-- Grid Action Toolbar -->
+        <div class="bg-cardDark/80 border-b border-borderDark px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div class="flex items-center gap-2 text-xs text-slate-300">
+            <i class="fa-solid fa-arrows-up-down-left-right text-sky-400"></i>
+            <span>Drag cards or use <strong class="text-white">&larr; / &rarr;</strong> arrows to reorder pages. Click a card to edit.</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="gridTotalPagesBadge" class="text-xs font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2.5 py-1 rounded-full">0 Pages</span>
+            <button id="gridAddMoreBtn" type="button"
+              class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-semibold flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-plus"></i> Add Pages
+            </button>
+          </div>
+        </div>
+
+        <!-- Responsive Page Cards Grid -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div id="gridContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-w-6xl mx-auto pb-20 md:pb-4">
+            <!-- Draggable & Reorderable Page Cards rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile "Adjust Page" Toggle Pill (Single View Only) -->
       <button id="editToggleBtn"
-        class="hidden md:hidden fixed bottom-[96px] left-1/2 -translate-x-1/2 z-20 px-5 py-2.5 rounded-full bg-slate-800/95 backdrop-blur-md border border-slate-600 text-white text-sm font-semibold shadow-xl items-center gap-2 active:scale-95 transition">
+        class="hidden md:hidden fixed bottom-[92px] left-1/2 -translate-x-1/2 z-20 px-5 py-2.5 rounded-full bg-slate-800/95 backdrop-blur-md border border-slate-600 text-white text-sm font-semibold shadow-xl items-center gap-2 active:scale-95 transition">
         <i class="fa-solid fa-sliders text-blue-400"></i>
         <span>Adjust Page</span>
       </button>
 
       <!-- Mobile Floating Action Buttons (Camera & Gallery Upload) -->
-      <div id="mobileFabs" class="md:hidden fixed bottom-[96px] right-4 z-20 flex flex-col items-end gap-3">
+      <div id="mobileFabs" class="md:hidden fixed bottom-[92px] right-4 z-20 flex flex-col items-end gap-3">
         <button id="uploadBtnMobile" title="Upload from Gallery"
           class="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 text-slate-100 shadow-lg flex items-center justify-center text-lg active:scale-90 transition">
           <i class="fa-solid fa-images"></i>
@@ -364,12 +467,6 @@
       <input type="file" id="fileInput" accept="image/*" multiple hidden />
     </main>
   </div>
-
-  <!-- ==================== BOTTOM THUMBNAIL CAROUSEL ==================== -->
-  <footer id="thumbBar"
-    class="h-[82px] bg-cardDark border-t border-borderDark px-3 py-2 flex items-center gap-2.5 overflow-x-auto no-scrollbar shrink-0 z-20">
-    <!-- Thumbnails rendered dynamically -->
-  </footer>
 
   <!-- ==================== LIVE CAMERA CAPTURE MODAL ==================== -->
   <div id="camModal" class="hidden fixed inset-0 bg-black z-50 flex-col items-center justify-between">
@@ -502,18 +599,35 @@
       const { jsPDF } = window.jspdf;
 
       // -------------------- Application State --------------------
-      let pages = []; // Array of { img, filter, blackLevel, whiteLevel, threshold, sharpness, rotation }
+      let pages = []; // Array of { img, filter, blackLevel, whiteLevel, threshold, sharpness, rotation, thumbUrl }
       let activeIndex = -1;
+      let currentViewMode = 'single'; // 'single' | 'grid'
       let isSheetOpen = false;
       let isComparingOriginal = false;
       let processDebounceTimer = null;
       let activeCameraStream = null;
 
+      // Drag-and-drop state for Grid Outline View (mouse & touch)
+      let draggedCardIndex = null;
+      let touchDragSourceIndex = null;
+      let touchDragTargetIndex = null;
+
       // -------------------- DOM References --------------------
       const fileInput = document.getElementById('fileInput');
+      const previewStage = document.getElementById('previewStage');
+      const fileDropOverlay = document.getElementById('fileDropOverlay');
       const controlsPanel = document.getElementById('controlsPanel');
       const editToggleBtn = document.getElementById('editToggleBtn');
       const closeSheetBtn = document.getElementById('closeSheetBtn');
+
+      // View Mode Toggle Elements
+      const singleViewBtn = document.getElementById('singleViewBtn');
+      const gridViewBtn = document.getElementById('gridViewBtn');
+      const singlePageView = document.getElementById('singlePageView');
+      const gridOutlineView = document.getElementById('gridOutlineView');
+      const gridContainer = document.getElementById('gridContainer');
+      const gridTotalPagesBadge = document.getElementById('gridTotalPagesBadge');
+      const gridAddMoreBtn = document.getElementById('gridAddMoreBtn');
 
       const openCamBtnDesktop = document.getElementById('openCamBtnDesktop');
       const uploadBtnDesktop = document.getElementById('uploadBtnDesktop');
@@ -537,28 +651,11 @@
       const pageCounterPill = document.getElementById('pageCounterPill');
       const thumbBar = document.getElementById('thumbBar');
 
-      // Filters & Sliders
-      const activeFilterBadge = document.getElementById('activeFilterBadge');
-      const pencilLevelsGroup = document.getElementById('pencilLevelsGroup');
-      const bwThresholdGroup = document.getElementById('bwThresholdGroup');
-      const sharpnessGroup = document.getElementById('sharpnessGroup');
-
-      const sliderBlackLevel = document.getElementById('sliderBlackLevel');
-      const sliderWhiteLevel = document.getElementById('sliderWhiteLevel');
-      const sliderThreshold = document.getElementById('sliderThreshold');
-      const sliderSharpness = document.getElementById('sliderSharpness');
-
-      const valBlackLevel = document.getElementById('valBlackLevel');
-      const valWhiteLevel = document.getElementById('valWhiteLevel');
-      const valThreshold = document.getElementById('valThreshold');
-      const valSharpness = document.getElementById('valSharpness');
-
-      // Page Management Buttons
-      const rotateLeftBtn = document.getElementById('rotateLeftBtn');
-      const rotateRightBtn = document.getElementById('rotateRightBtn');
-      const moveLeftBtn = document.getElementById('moveLeftBtn');
-      const moveRightBtn = document.getElementById('moveRightBtn');
-      const deletePageBtn = document.getElementById('deletePageBtn');
+      // Filmstrip & Stage Navigation Arrows
+      const prevPageNavBtn = document.getElementById('prevPageNavBtn');
+      const nextPageNavBtn = document.getElementById('nextPageNavBtn');
+      const filmstripPrevBtn = document.getElementById('filmstripPrevBtn');
+      const filmstripNextBtn = document.getElementById('filmstripNextBtn');
       const clearAllBtn = document.getElementById('clearAllBtn');
 
       // Export & Share Modal Elements
@@ -664,22 +761,50 @@
 
       closeSheetBtn.addEventListener('click', closeMobileSheet);
 
-      // -------------------- Multi-Image File Upload --------------------
+      // -------------------- Two Distinct View Modes (Single Page vs Grid Outline) --------------------
+
+      function setViewMode(mode) {
+        currentViewMode = mode;
+
+        if (mode === 'single') {
+          singleViewBtn.className = 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow';
+          gridViewBtn.className = 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-white';
+        } else {
+          gridViewBtn.className = 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-blue-600 text-white shadow';
+          singleViewBtn.className = 'px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-white';
+          closeMobileSheet();
+        }
+
+        updateLayoutVisibility();
+
+        if (pages.length > 0) {
+          if (mode === 'single') {
+            renderThumbnails();
+            loadActivePage();
+          } else {
+            renderGridOutline();
+          }
+        }
+      }
+
+      singleViewBtn.addEventListener('click', () => setViewMode('single'));
+      gridViewBtn.addEventListener('click', () => setViewMode('grid'));
+
+      // -------------------- Multi-Image File Upload & Desktop Drag-and-Drop --------------------
 
       function triggerFileUpload() {
         fileInput.click();
       }
 
-      [uploadBtnDesktop, uploadBtnMobile, emptyUploadBtn].forEach(btn => {
+      [uploadBtnDesktop, uploadBtnMobile, emptyUploadBtn, gridAddMoreBtn].forEach(btn => {
         if (btn) btn.addEventListener('click', triggerFileUpload);
       });
 
-      fileInput.addEventListener('change', (e) => {
-        const files = Array.from(e.target.files || []);
+      function handleImageFiles(fileList) {
+        const files = Array.from(fileList || []).filter(f => f.type.startsWith('image/'));
         if (!files.length) return;
 
         files.forEach(file => {
-          if (!file.type.startsWith('image/')) return;
           const reader = new FileReader();
           reader.onload = (event) => {
             const img = new Image();
@@ -689,145 +814,151 @@
           };
           reader.readAsDataURL(file);
         });
+      }
 
+      fileInput.addEventListener('change', (e) => {
+        handleImageFiles(e.target.files);
         fileInput.value = '';
       });
 
-      // -------------------- Live High-Resolution Camera --------------------
-
-      async function openCameraModal() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          showMessage(
-            'Camera Unavailable',
-            'Your browser does not support live camera access here. Please use the Upload button to select photos from your camera or gallery.',
-            'warning'
-          );
-          return;
+      // Desktop drag-and-drop image files from computer directly onto workspace
+      let fileDragCounter = 0;
+      previewStage.addEventListener('dragenter', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+          e.preventDefault();
+          fileDragCounter++;
+          fileDropOverlay.classList.remove('hidden');
+          fileDropOverlay.classList.add('flex');
         }
+      });
 
-        try {
-          // Primary attempt: Rear camera at 4K ideal resolution with continuous autofocus
-          activeCameraStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: { ideal: 'environment' },
-              width: { ideal: 4096 },
-              height: { ideal: 2160 },
-              advanced: [{ focusMode: 'continuous' }]
-            },
-            audio: false
-          });
-        } catch (primaryErr) {
-          try {
-            // Fallback attempt: Standard rear camera constraint
-            activeCameraStream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: 'environment' },
-              audio: false
-            });
-          } catch (fallbackErr) {
-            try {
-              // Last fallback: Any available camera
-              activeCameraStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: false
-              });
-            } catch (finalErr) {
-              showMessage(
-                'Camera Permission Denied',
-                'Please allow camera access in your browser settings, or use the Upload button to take a photo using your phone camera app.',
-                'error'
-              );
-              return;
-            }
+      previewStage.addEventListener('dragover', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+          e.preventDefault();
+        }
+      });
+
+      previewStage.addEventListener('dragleave', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+          fileDragCounter--;
+          if (fileDragCounter <= 0) {
+            fileDragCounter = 0;
+            fileDropOverlay.classList.add('hidden');
+            fileDropOverlay.classList.remove('flex');
           }
         }
-
-        webcamVideo.srcObject = activeCameraStream;
-        camModal.classList.remove('hidden');
-        camModal.classList.add('flex');
-      }
-
-      function stopCameraModal() {
-        if (activeCameraStream) {
-          activeCameraStream.getTracks().forEach(track => track.stop());
-          activeCameraStream = null;
-        }
-        webcamVideo.srcObject = null;
-        camModal.classList.add('hidden');
-        camModal.classList.remove('flex');
-      }
-
-      [openCamBtnDesktop, openCamBtnMobile, emptyCamBtn].forEach(btn => {
-        if (btn) btn.addEventListener('click', openCameraModal);
       });
 
-      closeCamBtn.addEventListener('click', stopCameraModal);
-
-      captureSnapBtn.addEventListener('click', () => {
-        const vw = webcamVideo.videoWidth;
-        const vh = webcamVideo.videoHeight;
-        if (!vw || !vh) {
-          showToast('Camera warming up, tap again');
-          return;
+      previewStage.addEventListener('drop', (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          e.preventDefault();
+          fileDragCounter = 0;
+          fileDropOverlay.classList.add('hidden');
+          fileDropOverlay.classList.remove('flex');
+          handleImageFiles(e.dataTransfer.files);
+          showToast(`Added ${e.dataTransfer.files.length} image(s)`);
         }
-
-        const snapCanvas = document.createElement('canvas');
-        snapCanvas.width = vw;
-        snapCanvas.height = vh;
-        const snapCtx = snapCanvas.getContext('2d');
-        snapCtx.drawImage(webcamVideo, 0, 0, vw, vh);
-
-        const img = new Image();
-        img.onload = () => {
-          addPage(img);
-          stopCameraModal();
-          showToast('Photo captured');
-        };
-        img.src = snapCanvas.toDataURL('image/jpeg', 0.98);
       });
-
       // -------------------- Page State & UI Synchronization --------------------
 
+      function generateInitialThumbDataUrl(imgElement) {
+        const tempCanvas = document.createElement('canvas');
+        const maxThumb = 320;
+        const scale = Math.min(1, maxThumb / Math.max(imgElement.width, imgElement.height));
+        tempCanvas.width = Math.max(1, Math.floor(imgElement.width * scale));
+        tempCanvas.height = Math.max(1, Math.floor(imgElement.height * scale));
+        tempCanvas.getContext('2d').drawImage(imgElement, 0, 0, tempCanvas.width, tempCanvas.height);
+        return tempCanvas.toDataURL('image/jpeg', 0.45);
+      }
+
       function addPage(imgElement) {
-        pages.push({
+        const newPage = {
           img: imgElement,
           filter: 'pencil_extreme', // Default to Extreme Pencil
           blackLevel: 80,
           whiteLevel: 160,
           threshold: 135,
           sharpness: 60,
-          rotation: 0
-        });
+          rotation: 0,
+          thumbUrl: generateInitialThumbDataUrl(imgElement)
+        };
+
+        pages.push(newPage);
         activeIndex = pages.length - 1;
-        renderThumbnails();
-        loadActivePage();
+
+        // Pre-render enhanced thumbnail immediately so Grid Outline View also reflects filters
+        const offCanvas = document.createElement('canvas');
+        renderPageToCanvas(newPage, offCanvas, 420, false);
+        newPage.thumbUrl = offCanvas.toDataURL('image/jpeg', 0.55);
+
+        updateLayoutVisibility();
+        if (currentViewMode === 'single') {
+          renderThumbnails();
+          loadActivePage();
+        } else {
+          renderGridOutline();
+        }
       }
 
       function updateLayoutVisibility() {
         const hasPages = pages.length > 0;
+        const isDesktop = window.innerWidth > 768;
 
-        if (hasPages) {
-          emptyState.classList.add('hidden');
-          canvasWrapper.classList.remove('hidden');
-          canvasWrapper.classList.add('flex');
-          pageCounterPill.textContent = `Page ${activeIndex + 1} of ${pages.length}`;
-
-          moveLeftBtn.disabled = activeIndex <= 0;
-          moveRightBtn.disabled = activeIndex >= pages.length - 1;
-
-          if (window.innerWidth <= 768) {
-            editToggleBtn.classList.remove('hidden');
-            editToggleBtn.classList.add('flex');
-          } else {
-            editToggleBtn.classList.add('hidden');
-            editToggleBtn.classList.remove('flex');
-          }
-        } else {
+        if (!hasPages) {
           emptyState.classList.remove('hidden');
-          canvasWrapper.classList.add('hidden');
-          canvasWrapper.classList.remove('flex');
+          emptyState.classList.add('flex');
+          singlePageView.classList.add('hidden');
+          singlePageView.classList.remove('flex');
+          gridOutlineView.classList.add('hidden');
+          gridOutlineView.classList.remove('flex');
           editToggleBtn.classList.add('hidden');
           editToggleBtn.classList.remove('flex');
           closeMobileSheet();
+
+          // On laptop, keep left sidebar visible so Capture & Upload buttons are always ready
+          if (isDesktop) {
+            controlsPanel.classList.remove('hidden');
+          }
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        emptyState.classList.remove('flex');
+
+        if (currentViewMode === 'single') {
+          singlePageView.classList.remove('hidden');
+          singlePageView.classList.add('flex');
+          gridOutlineView.classList.add('hidden');
+          gridOutlineView.classList.remove('flex');
+
+          if (isDesktop) {
+            controlsPanel.classList.remove('hidden');
+            editToggleBtn.classList.add('hidden');
+            editToggleBtn.classList.remove('flex');
+          } else {
+            editToggleBtn.classList.remove('hidden');
+            editToggleBtn.classList.add('flex');
+          }
+
+          pageCounterPill.textContent = `Page ${activeIndex + 1} of ${pages.length}`;
+          const isFirst = activeIndex <= 0;
+          const isLast = activeIndex >= pages.length - 1;
+
+          moveLeftBtn.disabled = isFirst;
+          moveRightBtn.disabled = isLast;
+          prevPageNavBtn.disabled = isFirst;
+          nextPageNavBtn.disabled = isLast;
+          filmstripPrevBtn.disabled = isFirst;
+          filmstripNextBtn.disabled = isLast;
+        } else {
+          // Grid Outline View
+          singlePageView.classList.add('hidden');
+          singlePageView.classList.remove('flex');
+          gridOutlineView.classList.remove('hidden');
+          gridOutlineView.classList.add('flex');
+          editToggleBtn.classList.add('hidden');
+          editToggleBtn.classList.remove('flex');
+          gridTotalPagesBadge.textContent = `${pages.length} Page${pages.length === 1 ? '' : 's'}`;
         }
       }
 
@@ -838,276 +969,30 @@
         updateLayoutVisibility();
       });
 
-      function loadActivePage() {
-        if (activeIndex < 0 || activeIndex >= pages.length) {
-          updateLayoutVisibility();
-          return;
-        }
-
-        updateLayoutVisibility();
-        const p = pages[activeIndex];
-
-        // Sync slider values & readouts
-        sliderBlackLevel.value = p.blackLevel;
-        sliderWhiteLevel.value = p.whiteLevel;
-        sliderThreshold.value = p.threshold;
-        sliderSharpness.value = p.sharpness;
-
-        valBlackLevel.textContent = p.blackLevel;
-        valWhiteLevel.textContent = p.whiteLevel;
-        valThreshold.textContent = p.threshold;
-        valSharpness.textContent = p.sharpness;
-
-        // Sync active filter buttons
-        const filterNames = {
-          pencil_extreme: 'Extreme Pencil',
-          magic_color: 'Magic Color',
-          magic_bw: 'Magic Pro B&W',
-          original: 'Original'
-        };
-        activeFilterBadge.textContent = filterNames[p.filter] || 'Extreme Pencil';
-
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-          const isMatch = btn.dataset.filter === p.filter;
-          if (isMatch) {
-            btn.classList.add('active');
-            if (p.filter === 'pencil_extreme') {
-              btn.className = 'filter-btn active shrink-0 px-3 py-2.5 rounded-xl border border-rose-500 bg-rose-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5';
-            } else {
-              btn.className = 'filter-btn active shrink-0 px-3 py-2.5 rounded-xl border border-blue-500 bg-blue-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5';
-            }
-          } else {
-            btn.classList.remove('active');
-            btn.className = 'filter-btn shrink-0 px-3 py-2.5 rounded-xl border border-borderDark bg-panelDark hover:bg-slate-800 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5';
-          }
-        });
-
-        // Show relevant adjustment sliders per filter
-        pencilLevelsGroup.classList.toggle('hidden', p.filter !== 'pencil_extreme');
-        bwThresholdGroup.classList.toggle('hidden', p.filter !== 'magic_bw');
-        sharpnessGroup.classList.toggle('hidden', p.filter === 'original' || p.filter === 'magic_bw');
-
-        queueProcessAndDraw();
+      function goToPage(targetIdx) {
+        if (targetIdx < 0 || targetIdx >= pages.length) return;
+        activeIndex = targetIdx;
+        renderThumbnails();
+        loadActivePage();
       }
 
-      // -------------------- Real-Time Image Processing Engine --------------------
+      prevPageNavBtn.addEventListener('click', () => goToPage(activeIndex - 1));
+      nextPageNavBtn.addEventListener('click', () => goToPage(activeIndex + 1));
+      filmstripPrevBtn.addEventListener('click', () => goToPage(activeIndex - 1));
+      filmstripNextBtn.addEventListener('click', () => goToPage(activeIndex + 1));
 
-      function queueProcessAndDraw() {
-        clearTimeout(processDebounceTimer);
-        loadingText.textContent = 'Enhancing clarity...';
-        loadingOverlay.classList.remove('hidden');
-        loadingOverlay.classList.add('flex');
+      // Laptop Keyboard Navigation (Left / Right Arrow keys to switch pages)
+      window.addEventListener('keydown', (e) => {
+        if (pages.length === 0) return;
+        if (document.activeElement && ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+        if (!exportModal.classList.contains('hidden') || !camModal.classList.contains('hidden') || !messageModal.classList.contains('hidden')) return;
 
-        processDebounceTimer = setTimeout(() => {
-          requestAnimationFrame(() => {
-            try {
-              renderPageToCanvas(pages[activeIndex], mainCanvas, 1600, isComparingOriginal);
-              updateActiveThumbnail();
-            } catch (err) {
-              console.error('Canvas render error:', err);
-            } finally {
-              loadingOverlay.classList.add('hidden');
-              loadingOverlay.classList.remove('flex');
-            }
-          });
-        }, 65);
-      }
-
-      /**
-       * Renders a page object onto a target <canvas> at up to maxDim resolution.
-       * Used both for live interactive preview (1600px) and high-res PDF export (2200px).
-       */
-      function renderPageToCanvas(pageObj, targetCanvas, maxDim = 1600, forceOriginal = false) {
-        if (!pageObj) return;
-        const img = pageObj.img;
-        const targetCtx = targetCanvas.getContext('2d', { willReadFrequently: true });
-
-        const isRotated = (pageObj.rotation / 90) % 2 !== 0;
-        const rawW = isRotated ? img.height : img.width;
-        const rawH = isRotated ? img.width : img.height;
-
-        let scale = 1;
-        if (rawW > maxDim || rawH > maxDim) {
-          scale = Math.min(maxDim / rawW, maxDim / rawH);
-        }
-
-        const targetW = Math.max(1, Math.floor(rawW * scale));
-        const targetH = Math.max(1, Math.floor(rawH * scale));
-
-        targetCanvas.width = targetW;
-        targetCanvas.height = targetH;
-
-        targetCtx.save();
-        targetCtx.translate(targetW / 2, targetH / 2);
-        targetCtx.rotate((pageObj.rotation * Math.PI) / 180);
-        targetCtx.scale(scale, scale);
-        targetCtx.drawImage(img, -img.width / 2, -img.height / 2);
-        targetCtx.restore();
-
-        if (forceOriginal || pageObj.filter === 'original') {
-          return;
-        }
-
-        let imageData = targetCtx.getImageData(0, 0, targetW, targetH);
-        const pixels = imageData.data;
-
-        if (pageObj.filter === 'pencil_extreme') {
-          // Grayscale Levels LUT: maps [blackLevel..whiteLevel] -> [0..255]
-          const bLevel = parseInt(pageObj.blackLevel, 10);
-          const wLevel = parseInt(pageObj.whiteLevel, 10);
-          const range = Math.max(1, wLevel - bLevel);
-
-          const levelsLUT = new Uint8Array(256);
-          for (let i = 0; i < 256; i++) {
-            if (i <= bLevel) {
-              levelsLUT[i] = 0;
-            } else if (i >= wLevel) {
-              levelsLUT[i] = 255;
-            } else {
-              levelsLUT[i] = Math.floor(((i - bLevel) / range) * 255);
-            }
-          }
-
-          for (let i = 0; i < pixels.length; i += 4) {
-            const luma = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
-            const mapped = levelsLUT[Math.floor(luma)];
-            pixels[i] = mapped;
-            pixels[i + 1] = mapped;
-            pixels[i + 2] = mapped;
-          }
-        } else if (pageObj.filter === 'magic_color') {
-          // Magic Color: whiten light paper backgrounds while deepening dark ink & enhancing color saturation
-          for (let i = 0; i < pixels.length; i += 4) {
-            let r = pixels[i];
-            let g = pixels[i + 1];
-            let b = pixels[i + 2];
-            const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-
-            if (luma > 148) {
-              // Whiten paper background smoothly
-              r = Math.min(255, r * 1.24 + 24);
-              g = Math.min(255, g * 1.24 + 24);
-              b = Math.min(255, b * 1.24 + 24);
-            } else {
-              // Deepen text ink and boost saturation
-              const avg = (r + g + b) / 3;
-              const satBoost = 1.25;
-              r = (avg + (r - avg) * satBoost) * 0.84;
-              g = (avg + (g - avg) * satBoost) * 0.84;
-              b = (avg + (b - avg) * satBoost) * 0.84;
-            }
-
-            pixels[i] = Math.min(255, Math.max(0, r));
-            pixels[i + 1] = Math.min(255, Math.max(0, g));
-            pixels[i + 2] = Math.min(255, Math.max(0, b));
-          }
-        } else if (pageObj.filter === 'magic_bw') {
-          // Magic Pro B&W: high-contrast binary scan
-          const thresh = parseInt(pageObj.threshold, 10) || 135;
-          for (let i = 0; i < pixels.length; i += 4) {
-            const luma = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
-            const bin = luma >= thresh ? 255 : 0;
-            pixels[i] = bin;
-            pixels[i + 1] = bin;
-            pixels[i + 2] = bin;
-          }
-        }
-
-        // Apply 3x3 Laplacian Sharpening Convolution Matrix
-        const sharpnessAmount = parseInt(pageObj.sharpness, 10);
-        if (sharpnessAmount > 0 && pageObj.filter !== 'magic_bw') {
-          imageData = applyLaplacianSharpen(imageData, targetW, targetH, sharpnessAmount);
-        }
-
-        targetCtx.putImageData(imageData, 0, 0);
-      }
-
-      /**
-       * 3x3 Laplacian edge sharpening convolution matrix
-       */
-      function applyLaplacianSharpen(imageData, w, h, amount) {
-        const strength = amount / 50.0; // Range: 0.0 to 2.0
-        if (strength <= 0) return imageData;
-
-        const src = imageData.data;
-        const output = new ImageData(new Uint8ClampedArray(src), w, h);
-        const dst = output.data;
-
-        const centerWeight = 1 + 4 * strength;
-        const edgeWeight = -strength;
-
-        for (let y = 1; y < h - 1; y++) {
-          const rowOffset = y * w;
-          const prevRow = (y - 1) * w;
-          const nextRow = (y + 1) * w;
-
-          for (let x = 1; x < w - 1; x++) {
-            const idx = (rowOffset + x) * 4;
-            const idxT = (prevRow + x) * 4;
-            const idxB = (nextRow + x) * 4;
-            const idxL = (rowOffset + (x - 1)) * 4;
-            const idxR = (rowOffset + (x + 1)) * 4;
-
-            for (let c = 0; c < 3; c++) {
-              const val =
-                src[idx + c] * centerWeight +
-                src[idxT + c] * edgeWeight +
-                src[idxB + c] * edgeWeight +
-                src[idxL + c] * edgeWeight +
-                src[idxR + c] * edgeWeight;
-
-              dst[idx + c] = val < 0 ? 0 : val > 255 ? 255 : val;
-            }
-          }
-        }
-        return output;
-      }
-
-      // -------------------- Filter & Slider Event Listeners --------------------
-
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (activeIndex < 0) return;
-          const chosenFilter = btn.dataset.filter;
-          pages[activeIndex].filter = chosenFilter;
-
-          if (chosenFilter === 'pencil_extreme') {
-            pages[activeIndex].blackLevel = 80;
-            pages[activeIndex].whiteLevel = 160;
-            pages[activeIndex].sharpness = 60;
-          } else if (chosenFilter === 'magic_color') {
-            pages[activeIndex].sharpness = 45;
-          }
-
-          loadActivePage();
-        });
-      });
-
-      sliderBlackLevel.addEventListener('input', (e) => {
-        let val = parseInt(e.target.value, 10);
-        const whiteVal = parseInt(sliderWhiteLevel.value, 10);
-        if (val >= whiteVal) {
-          val = whiteVal - 1;
-          e.target.value = val;
-        }
-        valBlackLevel.textContent = val;
-        if (activeIndex >= 0) {
-          pages[activeIndex].blackLevel = val;
-          queueProcessAndDraw();
-        }
-      });
-
-      sliderWhiteLevel.addEventListener('input', (e) => {
-        let val = parseInt(e.target.value, 10);
-        const blackVal = parseInt(sliderBlackLevel.value, 10);
-        if (val <= blackVal) {
-          val = blackVal + 1;
-          e.target.value = val;
-        }
-        valWhiteLevel.textContent = val;
-        if (activeIndex >= 0) {
-          pages[activeIndex].whiteLevel = val;
-          queueProcessAndDraw();
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (activeIndex > 0) goToPage(activeIndex - 1);
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          if (activeIndex < pages.length - 1) goToPage(activeIndex + 1);
         }
       });
 
@@ -1161,46 +1046,73 @@
         loadActivePage();
       });
 
+      function movePageOrder(fromIndex, toIndex) {
+        if (fromIndex < 0 || fromIndex >= pages.length || toIndex < 0 || toIndex >= pages.length || fromIndex === toIndex) {
+          return;
+        }
+        const [movedItem] = pages.splice(fromIndex, 1);
+        pages.splice(toIndex, 0, movedItem);
+
+        // Keep activeIndex synchronized with the active document
+        if (activeIndex === fromIndex) {
+          activeIndex = toIndex;
+        } else if (fromIndex < activeIndex && toIndex >= activeIndex) {
+          activeIndex--;
+        } else if (fromIndex > activeIndex && toIndex <= activeIndex) {
+          activeIndex++;
+        }
+
+        if (currentViewMode === 'single') {
+          renderThumbnails();
+          loadActivePage();
+        } else {
+          renderGridOutline();
+          updateLayoutVisibility();
+        }
+      }
+
       moveLeftBtn.addEventListener('click', () => {
         if (activeIndex <= 0) return;
-        const temp = pages[activeIndex - 1];
-        pages[activeIndex - 1] = pages[activeIndex];
-        pages[activeIndex] = temp;
-        activeIndex--;
-        renderThumbnails();
-        loadActivePage();
+        movePageOrder(activeIndex, activeIndex - 1);
         showToast(`Moved to Page ${activeIndex + 1}`);
       });
 
       moveRightBtn.addEventListener('click', () => {
         if (activeIndex < 0 || activeIndex >= pages.length - 1) return;
-        const temp = pages[activeIndex + 1];
-        pages[activeIndex + 1] = pages[activeIndex];
-        pages[activeIndex] = temp;
-        activeIndex++;
-        renderThumbnails();
-        loadActivePage();
+        movePageOrder(activeIndex, activeIndex + 1);
         showToast(`Moved to Page ${activeIndex + 1}`);
       });
 
-      deletePageBtn.addEventListener('click', () => {
-        if (activeIndex < 0) return;
+      function confirmAndDeletePage(targetIndex) {
+        if (targetIndex < 0 || targetIndex >= pages.length) return;
         showConfirm(
           'Delete Page?',
-          `Remove Page ${activeIndex + 1} from this document?`,
+          `Remove Page ${targetIndex + 1} from this document?`,
           'Delete',
           () => {
-            pages.splice(activeIndex, 1);
+            pages.splice(targetIndex, 1);
             if (pages.length === 0) {
               activeIndex = -1;
             } else if (activeIndex >= pages.length) {
               activeIndex = pages.length - 1;
+            } else if (targetIndex < activeIndex) {
+              activeIndex--;
             }
-            renderThumbnails();
-            loadActivePage();
+
+            if (currentViewMode === 'single') {
+              renderThumbnails();
+              loadActivePage();
+            } else {
+              renderGridOutline();
+              updateLayoutVisibility();
+            }
             showToast('Page deleted');
           }
         );
+      }
+
+      deletePageBtn.addEventListener('click', () => {
+        confirmAndDeletePage(activeIndex);
       });
 
       clearAllBtn.addEventListener('click', () => {
@@ -1216,13 +1128,14 @@
             pages = [];
             activeIndex = -1;
             renderThumbnails();
+            renderGridOutline();
             updateLayoutVisibility();
             showToast('All pages cleared');
           }
         );
       });
 
-      // -------------------- Bottom Thumbnail Carousel --------------------
+      // -------------------- Bottom Filmstrip Carousel (Single Page View) --------------------
 
       function renderThumbnails() {
         thumbBar.innerHTML = '';
@@ -1231,8 +1144,9 @@
           const isActive = idx === activeIndex;
           const card = document.createElement('button');
           card.type = 'button';
-          card.className = `relative h-[62px] w-[48px] rounded-lg overflow-hidden shrink-0 border-2 transition ${
-            isActive ? 'border-blue-500 ring-2 ring-blue-500/30 scale-105' : 'border-slate-700 opacity-75 hover:opacity-100'
+          card.title = `Jump to Page ${idx + 1}`;
+          card.className = `relative h-[58px] w-[46px] rounded-lg overflow-hidden shrink-0 border-2 transition ${
+            isActive ? 'border-blue-500 ring-2 ring-blue-500/40 scale-105 opacity-100' : 'border-slate-700 opacity-75 hover:opacity-100'
           } bg-black`;
 
           const img = document.createElement('img');
@@ -1242,7 +1156,7 @@
 
           const badge = document.createElement('span');
           badge.className = `absolute bottom-0.5 right-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold ${
-            isActive ? 'bg-blue-600 text-white' : 'bg-black/80 text-slate-200'
+            isActive ? 'bg-blue-600 text-white' : 'bg-black/85 text-slate-200'
           }`;
           badge.textContent = `P${idx + 1}`;
 
@@ -1250,35 +1164,221 @@
           card.appendChild(badge);
 
           card.addEventListener('click', () => {
-            activeIndex = idx;
-            renderThumbnails();
-            loadActivePage();
+            goToPage(idx);
           });
 
           thumbBar.appendChild(card);
         });
 
-        // Add "+ Add Page" quick button at the end of carousel when pages exist
+        // Add "+ Add" quick button at the end of filmstrip
         if (pages.length > 0) {
           const addMoreBtn = document.createElement('button');
           addMoreBtn.type = 'button';
-          addMoreBtn.title = 'Add another page';
-          addMoreBtn.className = 'h-[62px] w-[48px] rounded-lg border-2 border-dashed border-slate-700 hover:border-blue-500 text-slate-400 hover:text-blue-400 shrink-0 flex flex-col items-center justify-center gap-0.5 transition';
-          addMoreBtn.innerHTML = '<i class="fa-solid fa-plus text-sm"></i><span class="text-[9px] font-semibold">Add</span>';
+          addMoreBtn.title = 'Add more pages';
+          addMoreBtn.className = 'h-[58px] w-[46px] rounded-lg border-2 border-dashed border-slate-700 hover:border-blue-500 text-slate-400 hover:text-blue-400 shrink-0 flex flex-col items-center justify-center gap-0.5 transition';
+          addMoreBtn.innerHTML = '<i class="fa-solid fa-plus text-xs"></i><span class="text-[9px] font-semibold">Add</span>';
           addMoreBtn.addEventListener('click', triggerFileUpload);
           thumbBar.appendChild(addMoreBtn);
+        }
+
+        // Smoothly scroll active thumbnail into view
+        const activeThumb = thumbBar.children[activeIndex];
+        if (activeThumb && typeof activeThumb.scrollIntoView === 'function') {
+          activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
       }
 
       function updateActiveThumbnail() {
         if (activeIndex < 0 || activeIndex >= pages.length) return;
-        const thumbDataUrl = mainCanvas.toDataURL('image/jpeg', 0.35);
+        const thumbDataUrl = mainCanvas.toDataURL('image/jpeg', 0.4);
         pages[activeIndex].thumbUrl = thumbDataUrl;
         const card = thumbBar.children[activeIndex];
         if (card) {
           const img = card.querySelector('img');
           if (img) img.src = thumbDataUrl;
         }
+      }
+
+      // -------------------- Grid Outline View (Reorder & Manage Mode) --------------------
+
+      function renderGridOutline() {
+        gridContainer.innerHTML = '';
+        gridTotalPagesBadge.textContent = `${pages.length} Page${pages.length === 1 ? '' : 's'}`;
+
+        pages.forEach((p, idx) => {
+          const isSelected = idx === activeIndex;
+          const card = document.createElement('div');
+          card.draggable = true;
+          card.dataset.index = idx;
+          card.className = `grid-card group relative bg-cardDark rounded-2xl border-2 ${
+            isSelected ? 'border-blue-500 ring-2 ring-blue-500/25' : 'border-borderDark hover:border-slate-500'
+          } p-2.5 flex flex-col gap-2 shadow-lg transition cursor-grab active:cursor-grabbing`;
+
+          // Top Badge & Delete Button Row
+          const topBar = document.createElement('div');
+          topBar.className = 'flex items-center justify-between gap-1';
+
+          const pageBadge = document.createElement('span');
+          pageBadge.className = `px-2 py-0.5 rounded-md text-xs font-bold ${
+            isSelected ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200 border border-slate-700'
+          }`;
+          pageBadge.textContent = `Page ${idx + 1}`;
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.title = `Delete Page ${idx + 1}`;
+          delBtn.className = 'w-7 h-7 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white flex items-center justify-center text-xs transition';
+          delBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            confirmAndDeletePage(idx);
+          });
+
+          topBar.appendChild(pageBadge);
+          topBar.appendChild(delBtn);
+
+          // Page Thumbnail Preview (Click to open in Single Page View)
+          const imgWrap = document.createElement('div');
+          imgWrap.title = 'Click to open in Single Page View';
+          imgWrap.className = 'relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 cursor-pointer';
+
+          const img = document.createElement('img');
+          img.src = p.thumbUrl || p.img.src;
+          img.alt = `Page ${idx + 1}`;
+          img.draggable = false;
+          img.className = 'w-full h-full object-contain pointer-events-none';
+
+          const editHint = document.createElement('div');
+          editHint.className = 'opacity-0 group-hover:opacity-100 transition absolute inset-0 bg-slate-950/55 flex items-center justify-center';
+          editHint.innerHTML = '<span class="px-3 py-1.5 rounded-full bg-blue-600 text-white text-xs font-semibold shadow-lg"><i class="fa-solid fa-pen-to-square mr-1"></i> Edit Page</span>';
+
+          imgWrap.appendChild(img);
+          imgWrap.appendChild(editHint);
+
+          imgWrap.addEventListener('click', () => {
+            activeIndex = idx;
+            setViewMode('single');
+          });
+
+          // Quick Reorder Arrow Controls (Works reliably on both Laptop & Mobile)
+          const reorderBar = document.createElement('div');
+          reorderBar.className = 'grid grid-cols-2 gap-1.5 pt-0.5';
+
+          const movePrevBtn = document.createElement('button');
+          movePrevBtn.type = 'button';
+          movePrevBtn.title = 'Move Page Earlier';
+          movePrevBtn.disabled = idx === 0;
+          movePrevBtn.className = 'py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-blue-600 disabled:opacity-30 disabled:pointer-events-none text-slate-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 border border-slate-700 transition active:scale-95';
+          movePrevBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> <span>Earlier</span>';
+          movePrevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            movePageOrder(idx, idx - 1);
+            showToast(`Moved to Page ${idx}`);
+          });
+
+          const moveNextBtn = document.createElement('button');
+          moveNextBtn.type = 'button';
+          moveNextBtn.title = 'Move Page Later';
+          moveNextBtn.disabled = idx === pages.length - 1;
+          moveNextBtn.className = 'py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-blue-600 disabled:opacity-30 disabled:pointer-events-none text-slate-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 border border-slate-700 transition active:scale-95';
+          moveNextBtn.innerHTML = '<span>Later</span> <i class="fa-solid fa-arrow-right"></i>';
+          moveNextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            movePageOrder(idx, idx + 1);
+            showToast(`Moved to Page ${idx + 2}`);
+          });
+
+          reorderBar.appendChild(movePrevBtn);
+          reorderBar.appendChild(moveNextBtn);
+
+          card.appendChild(topBar);
+          card.appendChild(imgWrap);
+          card.appendChild(reorderBar);
+
+          // Desktop HTML5 Drag-and-Drop Reordering
+          card.addEventListener('dragstart', (e) => {
+            draggedCardIndex = idx;
+            card.classList.add('dragging');
+            if (e.dataTransfer) {
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', String(idx));
+            }
+          });
+
+          card.addEventListener('dragover', (e) => {
+            if (draggedCardIndex === null || draggedCardIndex === idx) return;
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+            card.classList.add('drag-over');
+          });
+
+          card.addEventListener('dragleave', () => {
+            card.classList.remove('drag-over');
+          });
+
+          card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            card.classList.remove('drag-over');
+            if (draggedCardIndex !== null && draggedCardIndex !== idx) {
+              const from = draggedCardIndex;
+              draggedCardIndex = null;
+              movePageOrder(from, idx);
+              showToast(`Moved Page ${from + 1} to position ${idx + 1}`);
+            }
+          });
+
+          card.addEventListener('dragend', () => {
+            draggedCardIndex = null;
+            document.querySelectorAll('.grid-card').forEach(el => {
+              el.classList.remove('dragging', 'drag-over');
+            });
+          });
+
+          // Mobile Touch Drag-and-Drop Reordering
+          card.addEventListener('touchstart', (e) => {
+            if (e.target.closest('button')) return;
+            touchDragSourceIndex = idx;
+            touchDragTargetIndex = idx;
+          }, { passive: true });
+
+          card.addEventListener('touchmove', (e) => {
+            if (touchDragSourceIndex === null) return;
+            const touch = e.touches[0];
+            const hoveredEl = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetCard = hoveredEl ? hoveredEl.closest('.grid-card') : null;
+
+            document.querySelectorAll('.grid-card').forEach(el => el.classList.remove('drag-over'));
+            if (targetCard) {
+              const targetIdx = parseInt(targetCard.dataset.index, 10);
+              if (!isNaN(targetIdx) && targetIdx !== touchDragSourceIndex) {
+                touchDragTargetIndex = targetIdx;
+                targetCard.classList.add('drag-over');
+              }
+            }
+          }, { passive: true });
+
+          card.addEventListener('touchend', () => {
+            document.querySelectorAll('.grid-card').forEach(el => el.classList.remove('drag-over'));
+            if (
+              touchDragSourceIndex !== null &&
+              touchDragTargetIndex !== null &&
+              touchDragSourceIndex !== touchDragTargetIndex
+            ) {
+              const from = touchDragSourceIndex;
+              const to = touchDragTargetIndex;
+              touchDragSourceIndex = null;
+              touchDragTargetIndex = null;
+              movePageOrder(from, to);
+              showToast(`Moved Page ${from + 1} to position ${to + 1}`);
+            } else {
+              touchDragSourceIndex = null;
+              touchDragTargetIndex = null;
+            }
+          });
+
+          gridContainer.appendChild(card);
+        });
       }
 
       // -------------------- PDF Compilation & Direct Sharing (WhatsApp / Telegram / More) --------------------
