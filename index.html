@@ -3,1312 +3,1445 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>DocScan Pro - Share & Enhance</title>
+  <title>DocScan Pro - Mobile Document & Pencil Scanner</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- jsPDF via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- FontAwesome via CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            slateDark: '#0b1120',
+            cardDark: '#131c31',
+            panelDark: '#19233c',
+            borderDark: '#29354f',
+          }
+        }
+      }
+    };
+  </script>
+
   <style>
-    :root {
-      --bg-dark: #121826;
-      --bg-card: #1b2436;
-      --bg-grid: #0f172a;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
-      --border: #2e3a52;
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      height: 100dvh; 
+    html, body {
+      height: 100%;
+      height: 100dvh;
       overflow: hidden;
+      background-color: #0b1120;
+      color: #f8fafc;
     }
 
-    /* Navbar */
-    header {
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 10;
+    /* Hide scrollbars cleanly while keeping scrollability */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 700;
-      font-size: 1.25rem;
-      color: #38bdf8;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: 0.2s ease;
-      font-size: 0.9rem;
-      justify-content: center;
-    }
-
-    .btn:hover { background: var(--accent-hover); }
-    .btn-secondary { background: #374151; }
-    .btn-secondary:hover { background: #4b5563; }
-    .btn-success { background: #059669; }
-    .btn-success:hover { background: #047857; }
-    .btn-danger { background: #dc2626; }
-    .btn-danger:hover { background: #b91c1c; }
-    .btn-icon-only { padding: 8px 12px; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* View Toggle Button */
-    .view-toggle-btn {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px;
-      display: flex;
-      cursor: pointer;
-      overflow: hidden;
-    }
-
-    .view-toggle-option {
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      transition: 0.2s;
-    }
-    .view-toggle-option.active {
-      background: var(--accent);
-      color: white;
-    }
-
-    /* Layout Container */
-    .app-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-
-    /* Sidebar / Bottom Sheet for Controls */
-    .controls-panel {
-      width: 320px;
-      background: var(--bg-card);
-      border-right: 1px solid var(--border);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      overflow-y: auto;
-      transition: transform 0.3s ease;
-      z-index: 5;
-    }
-
-    .section-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .filter-scroll {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 8px;
+    .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    .filter-scroll::-webkit-scrollbar { display: none; }
 
-    .filter-btn {
-      background: #26334d;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: center;
-      font-size: 0.85rem;
-      transition: 0.2s;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .filter-btn.active, .filter-btn:hover {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: white;
-    }
-    .filter-btn[data-filter="pencil_extreme"] { border-color: #ef4444; }
-    .filter-btn[data-filter="pencil_extreme"].active { background: #ef4444; color: #fff; }
-
-    .slider-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 0.85rem;
-    }
-    .slider-group label { display: flex; justify-content: space-between; }
-    input[type="range"] { width: 100%; accent-color: var(--accent); }
-    input[type="text"] {
-      width: 100%; padding: 10px; border-radius: 4px; border: 1px solid var(--border);
-      background: var(--bg-dark); color: white; font-size: 1rem;
-    }
-    input[type="text"]:focus { outline: none; border-color: var(--accent); }
-
-
-    /* --- VIEWS --- */
-
-    /* Main Viewport Container */
-    .main-viewport {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      background: var(--bg-grid);
-    }
-
-    /* 1. Single Page Detail View */
-    .view-single {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10px;
-      position: relative;
-      overflow: auto;
-    }
-
-    .canvas-wrapper {
-      max-width: 100%;
-      max-height: 100%;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-      border-radius: 4px;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    canvas {
-      max-width: 100%;
-      max-height: 100%;
-      display: block;
-      object-fit: contain;
-    }
-
-    /* 2. Grid Outline View (For Reordering) */
-    .view-grid {
-      display: none; /* hidden by default */
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      align-items: flex-start;
-      align-content: flex-start;
-    }
-
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 20px;
+    /* Custom Range Sliders for Touch & Desktop */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
       width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
+      height: 6px;
+      background: #29354f;
+      border-radius: 999px;
+      outline: none;
     }
 
-    .grid-item {
-      background: white;
-      border-radius: 8px;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      cursor: grab;
-      position: relative;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
-      transition: transform 0.2s, box-shadow 0.2s;
-      user-select: none;
-    }
-    .grid-item:active { cursor: grabbing; }
-    .grid-item.dragging {
-      opacity: 0.5;
-      transform: scale(1.05);
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
-    }
-    .grid-item.drag-over {
-      border: 2px dashed var(--accent);
-    }
-
-    .grid-item img {
-      width: 100%;
-      height: 160px;
-      object-fit: contain;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-    }
-
-    .grid-item .page-num {
-      color: #334155;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .grid-item .delete-btn {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background: #ef4444;
-      color: white;
-      border: none;
-      width: 24px;
-      height: 24px;
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background: #3b82f6;
+      border: 2px solid #ffffff;
       cursor: pointer;
-      font-size: 0.8rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      transition: transform 0.15s ease;
     }
 
-    /* Bottom Thumbnail Carousel (Only in Single View) */
-    .thumbnails-bar {
-      height: 90px;
-      background: var(--bg-card);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 10px 15px;
-      gap: 12px;
-      overflow-x: auto;
-      z-index: 10;
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.15);
     }
 
-    .thumb-card {
-      position: relative;
-      height: 60px;
-      width: 45px;
-      border: 2px solid transparent;
-      border-radius: 4px;
-      overflow: hidden;
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3b82f6;
+      border: 2px solid #ffffff;
       cursor: pointer;
-      flex-shrink: 0;
-      background: #000;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     }
 
-    .thumb-card.active { border-color: var(--accent); }
-    .thumb-card img { width: 100%; height: 100%; object-fit: cover; }
-    .thumb-card .badge {
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      background: rgba(0,0,0,0.7);
-      font-size: 0.55rem;
-      padding: 2px 4px;
-      border-radius: 2px;
-    }
-
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 20px;
-      margin: auto;
-    }
-    .empty-state i { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; color: #38bdf8; }
-    .empty-state p { margin-top: 10px; font-size: 0.9rem; max-width: 250px; line-height: 1.4; }
-
-
-    /* Modals & Loaders */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.9);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .modal-content {
-      background: var(--bg-card);
-      padding: 24px;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      border: 1px solid var(--border);
-    }
-    .modal video { max-width: 100%; max-height: 80vh; background: #000; object-fit: contain; }
-    .camera-controls { display: flex; gap: 16px; position: absolute; bottom: 30px; }
-    .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); border: 4px solid white; cursor: pointer; display: flex; justify-content: center; align-items: center; }
-    .capture-btn:active { background: rgba(255, 255, 255, 0.8); }
-    .close-cam-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
-
-    .mobile-fab-container { display: none; position: absolute; bottom: 20px; right: 20px; flex-direction: column; gap: 10px; z-index: 10; }
-    .fab { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); font-size: 1.5rem; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-    .fab.secondary { width: 48px; height: 48px; background: var(--bg-card); color: var(--text); font-size: 1.2rem; align-self: flex-end; }
-    .edit-toggle-btn { display: none; }
-
-    .loading-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 50; justify-content: center; align-items: center; color: white; font-size: 1.2rem; flex-direction: column; gap: 10px; }
-    .loading-spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* Mobile Adjustments */
+    /* Mobile Bottom Sheet Transition */
     @media (max-width: 768px) {
-      header { padding: 10px 15px; }
-      .header-actions .btn-text { display: none; }
-      .header-actions .btn { padding: 8px 12px; }
-      
-      .app-container { flex-direction: column-reverse; }
-      
-      .controls-panel {
-        width: 100%; height: 55vh; border-right: none; border-top: 1px solid var(--border);
-        position: absolute; bottom: 0; left: 0; transform: translateY(100%); padding: 15px; gap: 15px;
+      #controlsPanel {
+        transform: translateY(100%);
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
       }
-      .controls-panel.open { transform: translateY(0); }
-      
-      .main-viewport { padding-bottom: 20px; }
-      
-      .edit-toggle-btn {
-        display: flex; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-        z-index: 10; border-radius: 20px; padding: 8px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      #controlsPanel.sheet-open {
+        transform: translateY(0);
       }
-      
-      .controls-panel > div:first-child { display: none; } /* Hide upload in panel */
-      .mobile-fab-container { display: flex; }
-      
-      .grid-container {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 15px;
-      }
-      .grid-item img { height: 130px; }
+    }
+
+    /* Spinner Animation */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      animation: spin 0.8s linear infinite;
     }
   </style>
 </head>
-<body>
+<body class="flex flex-col font-sans select-none">
 
-  <header>
-    <div class="logo">
-      <i class="fa-solid fa-file-signature"></i>
-      <span>DocScan Pro</span>
-    </div>
-    
-    <!-- View Toggle (Single vs Grid) -->
-    <div class="view-toggle-btn" id="viewToggleGroup" style="display: none;">
-        <div class="view-toggle-option active" id="viewSingleBtn" title="Single Page View"><i class="fa-solid fa-square"></i></div>
-        <div class="view-toggle-option" id="viewGridBtn" title="Grid Outline View"><i class="fa-solid fa-table-cells-large"></i></div>
+  <!-- ==================== TOP NAVIGATION BAR ==================== -->
+  <header class="bg-cardDark border-b border-borderDark px-4 py-3 flex items-center justify-between z-20 shrink-0">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-sky-400">
+        <i class="fa-solid fa-file-signature text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base sm:text-lg tracking-tight text-white leading-tight">DocScan Pro</h1>
+        <p class="text-[11px] text-slate-400 hidden sm:block">Handwriting & Document Scanner</p>
+      </div>
     </div>
 
-    <div class="header-actions">
-      <button class="btn btn-secondary btn-icon-only" id="clearAllBtn" title="Clear All">
-        <i class="fa-solid fa-trash"></i> <span class="btn-text">Clear</span>
+    <div class="flex items-center gap-2">
+      <button id="clearAllBtn" title="Clear All Pages"
+        class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-sm font-medium transition flex items-center gap-2 border border-slate-700">
+        <i class="fa-solid fa-trash text-rose-400"></i>
+        <span class="hidden sm:inline">Clear</span>
       </button>
-      <button class="btn btn-accent" id="exportPdfBtn" title="Export PDF">
-        <i class="fa-solid fa-share-nodes"></i> <span class="btn-text">Export PDF</span>
+
+      <button id="openExportModalBtn" title="Share or Export PDF"
+        class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-blue-600/25">
+        <i class="fa-solid fa-share-nodes"></i>
+        <span>Share / Export PDF</span>
       </button>
     </div>
   </header>
 
-  <div class="app-container">
-    
-    <!-- Controls Panel (For Detail View Only) -->
-    <aside class="controls-panel" id="controlsPanel">
-      <div>
-        <div class="section-title">1. Capture / Upload</div>
-        <div class="input-group">
-          <button class="btn" id="openCamBtnDesktop"><i class="fa-solid fa-camera"></i> Take Photo</button>
-          <button class="btn btn-secondary" id="uploadBtnDesktop"><i class="fa-solid fa-upload"></i> Upload Image</button>
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+    <!-- ==================== CONTROLS PANEL (Desktop Sidebar / Mobile Bottom Sheet) ==================== -->
+    <aside id="controlsPanel"
+      class="fixed md:static inset-x-0 bottom-0 z-30 md:z-10 w-full md:w-80 lg:w-88 max-h-[68dvh] md:max-h-none bg-cardDark border-t md:border-t-0 md:border-r border-borderDark rounded-t-2xl md:rounded-none flex flex-col shadow-2xl md:shadow-none">
+
+      <!-- Mobile Sheet Handle Header -->
+      <div class="md:hidden flex items-center justify-between px-4 pt-3 pb-2 border-b border-borderDark/70 shrink-0">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-blue-400 text-sm"></i>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Page Adjustments</span>
         </div>
+        <button id="closeSheetBtn" class="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i> Done
+        </button>
       </div>
 
-      <!-- Single Page Management -->
-      <div>
-        <div class="section-title">Manage Page</div>
-        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-          <button class="btn btn-secondary" style="flex:1" id="moveLeftBtn"><i class="fa-solid fa-arrow-left"></i> Left</button>
-          <button class="btn btn-secondary" style="flex:1" id="moveRightBtn">Right <i class="fa-solid fa-arrow-right"></i></button>
-        </div>
-        <button class="btn btn-danger" style="width: 100%" id="deletePageBtn"><i class="fa-solid fa-trash"></i> Delete This Page</button>
-      </div>
+      <!-- Scrollable Controls Body -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1">
 
-      <div>
-        <div class="section-title">Filters</div>
-        <div class="filter-scroll">
-          <button class="filter-btn active" data-filter="pencil_extreme">🔥 Extreme Pencil</button>
-          <button class="filter-btn" data-filter="magic_color">✨ Magic Color</button>
-          <button class="filter-btn" data-filter="magic_bw">📄 Magic Pro B&W</button>
-          <button class="filter-btn" data-filter="original">Original</button>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-title">Adjustments</div>
-        <div class="input-group">
-           <div class="slider-group" id="blackLevelGroup">
-            <label>Black Level (Darken Pencil) <span id="valBlackLevel">80</span></label>
-            <input type="range" id="sliderBlackLevel" min="0" max="255" value="80" />
-            <small style="color: var(--text-muted); font-size: 0.7rem;">Increase to make faint lines darker</small>
+        <!-- Desktop Capture / Upload Section (Hidden on Mobile, replaced by FABs) -->
+        <div class="hidden md:block space-y-2.5">
+          <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">1. Capture & Upload</div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button id="openCamBtnDesktop"
+              class="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold transition flex items-center justify-center gap-2 shadow-md shadow-blue-600/20">
+              <i class="fa-solid fa-camera"></i> Camera
+            </button>
+            <button id="uploadBtnDesktop"
+              class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-100 text-sm font-semibold transition flex items-center justify-center gap-2 border border-slate-700">
+              <i class="fa-solid fa-images"></i> Upload
+            </button>
           </div>
-          <div class="slider-group" id="whiteLevelGroup">
-            <label>White Level (Clean Paper) <span id="valWhiteLevel">160</span></label>
-            <input type="range" id="sliderWhiteLevel" min="0" max="255" value="160" />
-            <small style="color: var(--text-muted); font-size: 0.7rem;">Decrease to remove shadows/smudges</small>
+        </div>
+
+        <!-- Enhancement Filters -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Enhancement Filter</span>
+            <span id="activeFilterBadge" class="text-[11px] font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">Extreme Pencil</span>
           </div>
-          <div class="slider-group" id="sharpnessGroup">
-            <label>Extra Sharpening <span id="valSharpness">60</span></label>
+
+          <div class="flex md:grid md:grid-cols-2 gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button data-filter="pencil_extreme"
+              class="filter-btn active shrink-0 px-3 py-2.5 rounded-xl border border-rose-500/60 bg-rose-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5">
+              <span>🔥 Extreme Pencil</span>
+            </button>
+            <button data-filter="magic_color"
+              class="filter-btn shrink-0 px-3 py-2.5 rounded-xl border border-borderDark bg-panelDark hover:bg-slate-800 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5">
+              <span>✨ Magic Color</span>
+            </button>
+            <button data-filter="magic_bw"
+              class="filter-btn shrink-0 px-3 py-2.5 rounded-xl border border-borderDark bg-panelDark hover:bg-slate-800 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5">
+              <span>📄 Magic Pro B&W</span>
+            </button>
+            <button data-filter="original"
+              class="filter-btn shrink-0 px-3 py-2.5 rounded-xl border border-borderDark bg-panelDark hover:bg-slate-800 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5">
+              <span>🖼️ Original</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sliders Section -->
+        <div class="space-y-4 bg-panelDark/70 p-3.5 rounded-xl border border-borderDark/80">
+          <!-- Extreme Pencil Levels Sliders -->
+          <div id="pencilLevelsGroup" class="space-y-3.5">
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-medium">
+                <span class="text-slate-200">Black Level (Darken Pencil)</span>
+                <span id="valBlackLevel" class="text-blue-400 font-semibold">80</span>
+              </div>
+              <input type="range" id="sliderBlackLevel" min="0" max="254" value="80" />
+              <p class="text-[11px] text-slate-400">Slide right to make faint graphite strokes darker</p>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs font-medium">
+                <span class="text-slate-200">White Level (Clean Paper)</span>
+                <span id="valWhiteLevel" class="text-blue-400 font-semibold">160</span>
+              </div>
+              <input type="range" id="sliderWhiteLevel" min="1" max="255" value="160" />
+              <p class="text-[11px] text-slate-400">Slide left to whiten shadowed paper background</p>
+            </div>
+          </div>
+
+          <!-- Magic Pro B&W Threshold Slider -->
+          <div id="bwThresholdGroup" class="space-y-1.5 hidden">
+            <div class="flex justify-between text-xs font-medium">
+              <span class="text-slate-200">B&W Ink Threshold</span>
+              <span id="valThreshold" class="text-blue-400 font-semibold">135</span>
+            </div>
+            <input type="range" id="sliderThreshold" min="40" max="220" value="135" />
+            <p class="text-[11px] text-slate-400">Adjust cutoff between pure black ink and white paper</p>
+          </div>
+
+          <!-- Extra Sharpening Slider -->
+          <div id="sharpnessGroup" class="space-y-1.5 pt-1 border-t border-borderDark/70">
+            <div class="flex justify-between text-xs font-medium">
+              <span class="text-slate-200">Extra Sharpening</span>
+              <span id="valSharpness" class="text-sky-400 font-semibold">60</span>
+            </div>
             <input type="range" id="sliderSharpness" min="0" max="100" value="60" />
+            <p class="text-[11px] text-slate-400">3×3 Laplacian edge crispness for blurry handwriting</p>
           </div>
         </div>
-      </div>
 
-      <div>
-        <div class="section-title">Rotate</div>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" style="flex:1" id="rotateLeftBtn"><i class="fa-solid fa-rotate-left"></i> -90°</button>
-          <button class="btn btn-secondary" style="flex:1" id="rotateRightBtn"><i class="fa-solid fa-rotate-right"></i> +90°</button>
+        <!-- Rotate Controls -->
+        <div class="space-y-2">
+          <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Orientation</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="rotateLeftBtn"
+              class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-2 border border-slate-700">
+              <i class="fa-solid fa-rotate-left"></i> Rotate -90°
+            </button>
+            <button id="rotateRightBtn"
+              class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-2 border border-slate-700">
+              <i class="fa-solid fa-rotate-right"></i> Rotate +90°
+            </button>
+          </div>
         </div>
+
+        <!-- Page Order & Delete Management -->
+        <div class="space-y-2 pb-2">
+          <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Page Order & Management</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="moveLeftBtn"
+              class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none active:scale-95 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700">
+              <i class="fa-solid fa-arrow-left"></i> Move Left
+            </button>
+            <button id="moveRightBtn"
+              class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none active:scale-95 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700">
+              <span>Move Right</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+          <button id="deletePageBtn"
+            class="w-full py-2.5 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 active:scale-95 text-rose-300 text-xs font-semibold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-trash-can"></i> Delete Current Page
+          </button>
+        </div>
+
       </div>
     </aside>
 
-    <!-- Main Viewport -->
-    <main class="main-viewport">
-      
-      <!-- 1. Single Page View Container -->
-      <div class="view-single" id="viewSingleContainer">
-          <div id="emptyState" class="empty-state">
-            <i class="fa-solid fa-pencil"></i>
-            <h2>Enhance Pencil Notes</h2>
-            <p>Capture or upload your blurry pencil notes to make them crystal clear.</p>
-          </div>
+    <!-- ==================== MAIN DOCUMENT PREVIEW STAGE ==================== -->
+    <main id="previewStage" class="flex-1 bg-slateDark relative flex flex-col items-center justify-center p-3 sm:p-6 overflow-hidden">
 
-          <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
-            <canvas id="mainCanvas"></canvas>
-            <div class="loading-overlay" id="loadingOverlay">
-                <div class="loading-spinner"></div>
-                <span>Processing...</span>
-            </div>
-          </div>
+      <!-- Empty State -->
+      <div id="emptyState" class="text-center max-w-sm mx-auto px-4 space-y-4">
+        <div class="w-20 h-20 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-sky-400">
+          <i class="fa-solid fa-file-pen text-3xl"></i>
+        </div>
+        <div class="space-y-1.5">
+          <h2 class="text-xl font-bold text-white">Scan Handwritten Notes</h2>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Snap a photo of your notebook or upload existing photos to enhance faint pencil writing and share as a crisp PDF.
+          </p>
+        </div>
+        <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
+          <button id="emptyCamBtn"
+            class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold transition flex items-center gap-2 shadow-lg shadow-blue-600/25">
+            <i class="fa-solid fa-camera"></i> Take Photo
+          </button>
+          <button id="emptyUploadBtn"
+            class="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-sm font-semibold transition flex items-center gap-2 border border-slate-700">
+            <i class="fa-solid fa-images"></i> Upload Photos
+          </button>
+        </div>
       </div>
 
-      <!-- 2. Grid Outline View Container (Hidden initially) -->
-      <div class="view-grid" id="viewGridContainer">
-          <!-- Draggable Grid Items will be injected here -->
-          <div class="grid-container" id="gridContainer"></div>
+      <!-- Canvas Wrapper -->
+      <div id="canvasWrapper" class="hidden relative max-w-full max-h-full items-center justify-center rounded-lg overflow-hidden shadow-2xl border border-slate-800 bg-black">
+        <canvas id="mainCanvas" class="max-w-full max-h-[calc(100dvh-215px)] md:max-h-[calc(100dvh-195px)] w-auto h-auto object-contain block"></canvas>
+
+        <!-- Hold-to-Compare Original Badge -->
+        <button id="compareOriginalBtn" title="Press and hold to view original photo"
+          class="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 shadow-lg active:bg-blue-600 active:text-white">
+          <i class="fa-solid fa-eye"></i> <span>Hold: Original</span>
+        </button>
+
+        <!-- Page Indicator Pill -->
+        <div id="pageCounterPill"
+          class="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700 text-slate-200 text-xs font-semibold">
+          Page 1 of 1
+        </div>
+
+        <!-- Processing Spinner Overlay -->
+        <div id="loadingOverlay"
+          class="hidden absolute inset-0 bg-slate-950/75 backdrop-blur-xs flex-col items-center justify-center gap-3 z-20">
+          <div class="w-10 h-10 rounded-full border-4 border-slate-600 border-t-blue-500 spinner"></div>
+          <span id="loadingText" class="text-sm font-medium text-white">Enhancing clarity...</span>
+        </div>
       </div>
 
-      <!-- Mobile Edit Toggle (Only visible in single view) -->
-      <button class="btn btn-secondary edit-toggle-btn" id="editToggleBtn">
-        <i class="fa-solid fa-sliders"></i> Adjust Page
+      <!-- Mobile "Adjust Page" Toggle Pill -->
+      <button id="editToggleBtn"
+        class="hidden md:hidden fixed bottom-[96px] left-1/2 -translate-x-1/2 z-20 px-5 py-2.5 rounded-full bg-slate-800/95 backdrop-blur-md border border-slate-600 text-white text-sm font-semibold shadow-xl items-center gap-2 active:scale-95 transition">
+        <i class="fa-solid fa-sliders text-blue-400"></i>
+        <span>Adjust Page</span>
       </button>
 
-      <!-- Mobile FABs -->
-      <div class="mobile-fab-container" id="mobileFabs">
-        <button class="fab secondary" id="uploadBtnMobile" title="Upload Image">
-          <i class="fa-solid fa-image"></i>
+      <!-- Mobile Floating Action Buttons (Camera & Gallery Upload) -->
+      <div id="mobileFabs" class="md:hidden fixed bottom-[96px] right-4 z-20 flex flex-col items-end gap-3">
+        <button id="uploadBtnMobile" title="Upload from Gallery"
+          class="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 text-slate-100 shadow-lg flex items-center justify-center text-lg active:scale-90 transition">
+          <i class="fa-solid fa-images"></i>
         </button>
-        <button class="fab" id="openCamBtnMobile" title="Take Photo">
+        <button id="openCamBtnMobile" title="Take Photo"
+          class="w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/35 flex items-center justify-center text-xl active:scale-90 transition">
           <i class="fa-solid fa-camera"></i>
         </button>
       </div>
-      
+
+      <!-- Hidden Multi-Image File Input -->
       <input type="file" id="fileInput" accept="image/*" multiple hidden />
     </main>
   </div>
 
-  <!-- Bottom Page Carousel (Hidden in Grid View) -->
-  <div class="thumbnails-bar" id="thumbBar"></div>
+  <!-- ==================== BOTTOM THUMBNAIL CAROUSEL ==================== -->
+  <footer id="thumbBar"
+    class="h-[82px] bg-cardDark border-t border-borderDark px-3 py-2 flex items-center gap-2.5 overflow-x-auto no-scrollbar shrink-0 z-20">
+    <!-- Thumbnails rendered dynamically -->
+  </footer>
 
-  <!-- Export Name Modal -->
-  <div class="modal" id="exportModal" style="background: rgba(0,0,0,0.7);">
-    <div class="modal-content">
-      <h3 style="margin-bottom: 0;">Export PDF</h3>
-      <div class="input-group">
-        <label style="color: var(--text-muted); font-size: 0.9rem;">Document Name</label>
-        <input type="text" id="fileNameInput" value="My_Scanned_Notes" />
+  <!-- ==================== LIVE CAMERA CAPTURE MODAL ==================== -->
+  <div id="camModal" class="hidden fixed inset-0 bg-black z-50 flex-col items-center justify-between">
+    <!-- Camera Top Controls -->
+    <div class="w-full px-4 py-3 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent z-10">
+      <span class="text-xs font-medium text-slate-300 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+        <i class="fa-solid fa-wand-magic-sparkles text-sky-400 mr-1"></i> Auto-Focus & High-Res Active
+      </span>
+      <button id="closeCamBtn"
+        class="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center text-lg backdrop-blur-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Live Video Feed with Framing Guide -->
+    <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden">
+      <video id="webcamVideo" autoplay playsinline muted class="w-full h-full object-contain"></video>
+      <!-- Subtle Corner Framing Guides -->
+      <div class="pointer-events-none absolute inset-6 sm:inset-12 border border-white/20 rounded-xl">
+        <div class="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-2 border-l-2 border-sky-400 rounded-tl-lg"></div>
+        <div class="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-2 border-r-2 border-sky-400 rounded-tr-lg"></div>
+        <div class="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-2 border-l-2 border-sky-400 rounded-bl-lg"></div>
+        <div class="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-2 border-r-2 border-sky-400 rounded-br-lg"></div>
       </div>
-      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap;">
-        <button class="btn btn-secondary" id="cancelExportBtn">Cancel</button>
-        <button class="btn btn-success" id="saveExportBtn"><i class="fa-solid fa-download"></i> Save File</button>
-        <button class="btn" id="shareExportBtn" style="display: none; background: #8b5cf6;"><i class="fa-solid fa-share-nodes"></i> Share App...</button>
+    </div>
+
+    <!-- Camera Bottom Shutter Bar -->
+    <div class="w-full py-6 px-6 flex items-center justify-center bg-gradient-to-t from-black/90 to-transparent z-10">
+      <button id="captureSnapBtn" title="Capture Photo"
+        class="w-[74px] h-[74px] rounded-full bg-white/25 border-4 border-white flex items-center justify-center active:scale-90 transition shadow-2xl">
+        <div class="w-[56px] h-[56px] rounded-full bg-white"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== SHARE / EXPORT PDF MODAL ==================== -->
+  <div id="exportModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs z-50 items-center justify-center p-4">
+    <div class="bg-cardDark border border-borderDark rounded-2xl w-full max-w-md p-5 sm:p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+            <i class="fa-solid fa-file-pdf text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Share or Export PDF</h3>
+            <p id="exportPageCountText" class="text-xs text-slate-400">1 page ready</p>
+          </div>
+        </div>
+        <button id="cancelExportBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Document Name Input -->
+      <div class="space-y-1.5">
+        <label for="fileNameInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Document Name</label>
+        <div class="relative flex items-center">
+          <input type="text" id="fileNameInput" value="Scanned_Notes"
+            class="w-full px-3.5 py-2.5 pr-12 rounded-xl bg-slateDark border border-borderDark focus:border-blue-500 outline-none text-sm text-white font-medium" />
+          <span class="absolute right-3.5 text-xs font-semibold text-slate-500">.pdf</span>
+        </div>
+      </div>
+
+      <!-- Direct App Share Buttons -->
+      <div class="space-y-2">
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Direct Share (Mobile)</div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button id="shareWhatsAppBtn"
+            style="background-color: #25D366;"
+            class="py-3 px-4 rounded-xl hover:brightness-105 active:scale-95 text-white font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg">
+            <i class="fa-brands fa-whatsapp text-lg"></i>
+            <span>WhatsApp</span>
+          </button>
+
+          <button id="shareTelegramBtn"
+            style="background-color: #229ED9;"
+            class="py-3 px-4 rounded-xl hover:brightness-105 active:scale-95 text-white font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg">
+            <i class="fa-brands fa-telegram text-lg"></i>
+            <span>Telegram</span>
+          </button>
+        </div>
+
+        <button id="shareMoreAppsBtn"
+          class="w-full py-2.5 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white font-semibold text-sm transition flex items-center justify-center gap-2 shadow-md">
+          <i class="fa-solid fa-share-nodes"></i>
+          <span>More Apps</span>
+        </button>
+      </div>
+
+      <!-- Standard Save / Download Button -->
+      <div class="pt-2 border-t border-borderDark">
+        <button id="savePdfBtn"
+          class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 active:scale-95 text-white font-semibold text-sm transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download text-emerald-400"></i>
+          <span>Save PDF</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Camera Modal -->
-  <div class="modal" id="camModal">
-    <button class="close-cam-btn" id="closeCamBtn"><i class="fa-solid fa-xmark"></i></button>
-    <video id="webcamVideo" autoplay playsinline></video>
-    <div class="camera-controls">
-      <button class="capture-btn" id="captureSnapBtn"></button>
+  <!-- ==================== CUSTOM MESSAGE / ALERT MODAL (No native alert/confirm) ==================== -->
+  <div id="messageModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs z-[60] items-center justify-center p-4">
+    <div class="bg-cardDark border border-borderDark rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
+      <div class="flex items-start gap-3">
+        <div id="msgModalIcon" class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+          <i class="fa-solid fa-circle-info text-lg"></i>
+        </div>
+        <div class="space-y-1">
+          <h4 id="msgModalTitle" class="text-base font-bold text-white">Notice</h4>
+          <p id="msgModalBody" class="text-sm text-slate-300 leading-relaxed"></p>
+        </div>
+      </div>
+      <div id="msgModalActions" class="flex justify-end gap-2 pt-2">
+        <button id="msgModalCancelBtn" class="hidden px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold">Cancel</button>
+        <button id="msgModalConfirmBtn" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold">OK</button>
+      </div>
     </div>
   </div>
 
+  <!-- ==================== FLOATING TOAST NOTIFICATION ==================== -->
+  <div id="toastBanner"
+    class="pointer-events-none opacity-0 transition-opacity duration-300 fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-900/95 border border-slate-700 text-white text-xs font-medium shadow-xl flex items-center gap-2">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastText">Saved</span>
+  </div>
+
+  <!-- ==================== APPLICATION LOGIC ==================== -->
   <script>
-    const { jsPDF } = window.jspdf;
+    (function () {
+      const { jsPDF } = window.jspdf;
 
-    // State management
-    let pages = []; 
-    let activeIndex = -1;
-    let isControlsOpen = false;
-    let processTimeout = null;
-    let currentView = 'single'; // 'single' or 'grid'
+      // -------------------- Application State --------------------
+      let pages = []; // Array of { img, filter, blackLevel, whiteLevel, threshold, sharpness, rotation }
+      let activeIndex = -1;
+      let isSheetOpen = false;
+      let isComparingOriginal = false;
+      let processDebounceTimer = null;
+      let activeCameraStream = null;
 
-    // View Management DOM
-    const viewToggleGroup = document.getElementById('viewToggleGroup');
-    const viewSingleBtn = document.getElementById('viewSingleBtn');
-    const viewGridBtn = document.getElementById('viewGridBtn');
-    const viewSingleContainer = document.getElementById('viewSingleContainer');
-    const viewGridContainer = document.getElementById('viewGridContainer');
-    const gridContainer = document.getElementById('gridContainer');
-    const thumbBar = document.getElementById('thumbBar');
+      // -------------------- DOM References --------------------
+      const fileInput = document.getElementById('fileInput');
+      const controlsPanel = document.getElementById('controlsPanel');
+      const editToggleBtn = document.getElementById('editToggleBtn');
+      const closeSheetBtn = document.getElementById('closeSheetBtn');
 
-    // DOM Elements
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtnDesktop = document.getElementById('uploadBtnDesktop');
-    const openCamBtnDesktop = document.getElementById('openCamBtnDesktop');
-    const uploadBtnMobile = document.getElementById('uploadBtnMobile');
-    const openCamBtnMobile = document.getElementById('openCamBtnMobile');
-    const editToggleBtn = document.getElementById('editToggleBtn');
-    const controlsPanel = document.getElementById('controlsPanel');
+      const openCamBtnDesktop = document.getElementById('openCamBtnDesktop');
+      const uploadBtnDesktop = document.getElementById('uploadBtnDesktop');
+      const openCamBtnMobile = document.getElementById('openCamBtnMobile');
+      const uploadBtnMobile = document.getElementById('uploadBtnMobile');
+      const emptyCamBtn = document.getElementById('emptyCamBtn');
+      const emptyUploadBtn = document.getElementById('emptyUploadBtn');
 
-    const moveLeftBtn = document.getElementById('moveLeftBtn');
-    const moveRightBtn = document.getElementById('moveRightBtn');
-    const deletePageBtn = document.getElementById('deletePageBtn');
+      const camModal = document.getElementById('camModal');
+      const webcamVideo = document.getElementById('webcamVideo');
+      const captureSnapBtn = document.getElementById('captureSnapBtn');
+      const closeCamBtn = document.getElementById('closeCamBtn');
 
-    const camModal = document.getElementById('camModal');
-    const webcamVideo = document.getElementById('webcamVideo');
-    const captureSnapBtn = document.getElementById('captureSnapBtn');
-    const closeCamBtn = document.getElementById('closeCamBtn');
+      const emptyState = document.getElementById('emptyState');
+      const canvasWrapper = document.getElementById('canvasWrapper');
+      const mainCanvas = document.getElementById('mainCanvas');
+      const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const loadingText = document.getElementById('loadingText');
+      const compareOriginalBtn = document.getElementById('compareOriginalBtn');
+      const pageCounterPill = document.getElementById('pageCounterPill');
+      const thumbBar = document.getElementById('thumbBar');
 
-    const mainCanvas = document.getElementById('mainCanvas');
-    const ctx = mainCanvas.getContext('2d');
-    const canvasWrapper = document.getElementById('canvasWrapper');
-    const emptyState = document.getElementById('emptyState');
-    const loadingOverlay = document.getElementById('loadingOverlay');
+      // Filters & Sliders
+      const activeFilterBadge = document.getElementById('activeFilterBadge');
+      const pencilLevelsGroup = document.getElementById('pencilLevelsGroup');
+      const bwThresholdGroup = document.getElementById('bwThresholdGroup');
+      const sharpnessGroup = document.getElementById('sharpnessGroup');
 
-    const exportPdfBtn = document.getElementById('exportPdfBtn');
-    const clearAllBtn = document.getElementById('clearAllBtn');
-    
-    const exportModal = document.getElementById('exportModal');
-    const fileNameInput = document.getElementById('fileNameInput');
-    const cancelExportBtn = document.getElementById('cancelExportBtn');
-    const saveExportBtn = document.getElementById('saveExportBtn');
-    const shareExportBtn = document.getElementById('shareExportBtn');
+      const sliderBlackLevel = document.getElementById('sliderBlackLevel');
+      const sliderWhiteLevel = document.getElementById('sliderWhiteLevel');
+      const sliderThreshold = document.getElementById('sliderThreshold');
+      const sliderSharpness = document.getElementById('sliderSharpness');
 
-    // Sliders
-    const sliderBlackLevel = document.getElementById('sliderBlackLevel');
-    const sliderWhiteLevel = document.getElementById('sliderWhiteLevel');
-    const sliderSharpness = document.getElementById('sliderSharpness');
-    const valBlackLevel = document.getElementById('valBlackLevel');
-    const valWhiteLevel = document.getElementById('valWhiteLevel');
-    const valSharpness = document.getElementById('valSharpness');
+      const valBlackLevel = document.getElementById('valBlackLevel');
+      const valWhiteLevel = document.getElementById('valWhiteLevel');
+      const valThreshold = document.getElementById('valThreshold');
+      const valSharpness = document.getElementById('valSharpness');
 
-    let stream = null;
+      // Page Management Buttons
+      const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+      const rotateRightBtn = document.getElementById('rotateRightBtn');
+      const moveLeftBtn = document.getElementById('moveLeftBtn');
+      const moveRightBtn = document.getElementById('moveRightBtn');
+      const deletePageBtn = document.getElementById('deletePageBtn');
+      const clearAllBtn = document.getElementById('clearAllBtn');
 
-    if (navigator.share && navigator.canShare) {
-        shareExportBtn.style.display = 'inline-flex';
-    }
+      // Export & Share Modal Elements
+      const openExportModalBtn = document.getElementById('openExportModalBtn');
+      const exportModal = document.getElementById('exportModal');
+      const exportPageCountText = document.getElementById('exportPageCountText');
+      const fileNameInput = document.getElementById('fileNameInput');
+      const cancelExportBtn = document.getElementById('cancelExportBtn');
+      const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
+      const shareTelegramBtn = document.getElementById('shareTelegramBtn');
+      const shareMoreAppsBtn = document.getElementById('shareMoreAppsBtn');
+      const savePdfBtn = document.getElementById('savePdfBtn');
 
-    // --- View Toggling ---
+      // Custom Message / Confirm Modal Elements
+      const messageModal = document.getElementById('messageModal');
+      const msgModalIcon = document.getElementById('msgModalIcon');
+      const msgModalTitle = document.getElementById('msgModalTitle');
+      const msgModalBody = document.getElementById('msgModalBody');
+      const msgModalCancelBtn = document.getElementById('msgModalCancelBtn');
+      const msgModalConfirmBtn = document.getElementById('msgModalConfirmBtn');
 
-    viewSingleBtn.onclick = () => switchView('single');
-    viewGridBtn.onclick = () => switchView('grid');
+      const toastBanner = document.getElementById('toastBanner');
+      const toastText = document.getElementById('toastText');
 
-    function switchView(view) {
-        currentView = view;
-        
-        if (view === 'single') {
-            viewSingleBtn.classList.add('active');
-            viewGridBtn.classList.remove('active');
-            
-            viewSingleContainer.style.display = 'flex';
-            viewGridContainer.style.display = 'none';
-            
-            thumbBar.style.display = 'flex';
-            
-            // Show edit tools and active canvas
-            if (pages.length > 0) {
-                controlsPanel.style.display = 'flex';
-                if (window.innerWidth <= 768) {
-                    editToggleBtn.style.display = 'flex';
-                }
-                loadActivePage();
-            }
-            
-        } else if (view === 'grid') {
-            viewGridBtn.classList.add('active');
-            viewSingleBtn.classList.remove('active');
-            
-            viewSingleContainer.style.display = 'none';
-            viewGridContainer.style.display = 'flex';
-            
-            thumbBar.style.display = 'none';
-            
-            // Hide edit tools in grid mode
-            controlsPanel.style.display = 'none';
-            editToggleBtn.style.display = 'none';
-            
-            if (isControlsOpen) {
-                controlsPanel.classList.remove('open');
-                editToggleBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Adjust Page';
-                editToggleBtn.classList.replace('btn-success', 'btn-secondary');
-                isControlsOpen = false;
-            }
-            
-            renderGrid();
-        }
-    }
+      // -------------------- Custom Non-Blocking Modals & Toasts --------------------
 
-
-    // --- Initialization & UI Binding ---
-
-    const triggerUpload = () => fileInput.click();
-    if(uploadBtnDesktop) uploadBtnDesktop.onclick = triggerUpload;
-    if(uploadBtnMobile) uploadBtnMobile.onclick = triggerUpload;
-
-    fileInput.onchange = (e) => {
-      const files = Array.from(e.target.files);
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => addPage(img);
-          img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-      fileInput.value = '';
-    };
-
-    const openCamera = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "environment", width: { ideal: 4096 }, height: { ideal: 2160 }, advanced: [{ focusMode: "continuous" }] }, 
-          audio: false 
-        });
-        webcamVideo.srcObject = stream;
-        camModal.style.display = 'flex';
-      } catch (err) {
-        alert("Camera access denied or not available. Ensure you have granted permissions.");
+      function showToast(text) {
+        toastText.textContent = text;
+        toastBanner.classList.remove('opacity-0');
+        clearTimeout(toastBanner._timer);
+        toastBanner._timer = setTimeout(() => {
+          toastBanner.classList.add('opacity-0');
+        }, 2400);
       }
-    };
-    if(openCamBtnDesktop) openCamBtnDesktop.onclick = openCamera;
-    if(openCamBtnMobile) openCamBtnMobile.onclick = openCamera;
 
-    const stopCamera = () => {
-      if (stream) { stream.getTracks().forEach(track => track.stop()); }
-      camModal.style.display = 'none';
-    };
-    closeCamBtn.onclick = stopCamera;
+      function showMessage(title, body, type = 'info') {
+        msgModalTitle.textContent = title;
+        msgModalBody.textContent = body;
+        msgModalCancelBtn.classList.add('hidden');
+        msgModalConfirmBtn.textContent = 'OK';
+        msgModalConfirmBtn.className = 'px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold';
 
-    captureSnapBtn.onclick = () => {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = webcamVideo.videoWidth;
-      tempCanvas.height = webcamVideo.videoHeight;
-      const tCtx = tempCanvas.getContext('2d');
-      tCtx.drawImage(webcamVideo, 0, 0);
-      
-      const img = new Image();
-      img.onload = () => {
-        addPage(img);
-        stopCamera();
-      };
-      img.src = tempCanvas.toDataURL('image/jpeg', 1.0); 
-    };
-
-    if(editToggleBtn) {
-      editToggleBtn.onclick = () => {
-        isControlsOpen = !isControlsOpen;
-        if(isControlsOpen) {
-          controlsPanel.classList.add('open');
-          editToggleBtn.innerHTML = '<i class="fa-solid fa-check"></i> Done';
-          editToggleBtn.classList.replace('btn-secondary', 'btn-success');
+        if (type === 'warning') {
+          msgModalIcon.className = 'w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5';
+          msgModalIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-lg"></i>';
+        } else if (type === 'error') {
+          msgModalIcon.className = 'w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 mt-0.5';
+          msgModalIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-lg"></i>';
         } else {
-          controlsPanel.classList.remove('open');
-          editToggleBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Adjust Page';
-          editToggleBtn.classList.replace('btn-success', 'btn-secondary');
+          msgModalIcon.className = 'w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5';
+          msgModalIcon.innerHTML = '<i class="fa-solid fa-circle-info text-lg"></i>';
         }
-      };
-    }
 
+        messageModal.classList.remove('hidden');
+        messageModal.classList.add('flex');
 
-    // --- Core Application Logic ---
-
-    function addPage(imgElement) {
-      // Pre-generate a thumbnail for speed in grid view
-      const tempCanvas = document.createElement('canvas');
-      const MAX_THUMB = 300;
-      const scale = Math.min(MAX_THUMB / imgElement.width, MAX_THUMB / imgElement.height);
-      tempCanvas.width = imgElement.width * scale;
-      tempCanvas.height = imgElement.height * scale;
-      tempCanvas.getContext('2d').drawImage(imgElement, 0, 0, tempCanvas.width, tempCanvas.height);
-      const thumbSrc = tempCanvas.toDataURL('image/jpeg', 0.5);
-
-      const pageData = {
-        id: 'page_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2, 9),
-        img: imgElement,
-        thumbBase: thumbSrc, // Baseline thumb (unfiltered)
-        thumbActive: thumbSrc, // Filtered thumb
-        filter: 'pencil_extreme', 
-        blackLevel: 80, 
-        whiteLevel: 160, 
-        sharpness: 60,   
-        rotation: 0
-      };
-      pages.push(pageData);
-      activeIndex = pages.length - 1;
-      
-      updateUIState();
-      if (currentView === 'single') {
-          renderThumbnails();
-          loadActivePage();
-      } else {
-          renderGrid();
+        msgModalConfirmBtn.onclick = () => {
+          messageModal.classList.add('hidden');
+          messageModal.classList.remove('flex');
+        };
       }
-    }
 
-    function updateUIState() {
-      const hasPages = pages.length > 0;
-      if(hasPages) {
-        emptyState.style.display = 'none';
-        viewToggleGroup.style.display = 'flex';
-        
-        if (currentView === 'single') {
-            canvasWrapper.style.display = 'flex';
-            controlsPanel.style.display = 'flex';
-            moveLeftBtn.disabled = activeIndex <= 0;
-            moveRightBtn.disabled = activeIndex >= pages.length - 1;
-            if(window.innerWidth <= 768) { editToggleBtn.style.display = 'flex'; }
-        }
-      } else {
-        emptyState.style.display = 'block';
-        viewToggleGroup.style.display = 'none';
-        canvasWrapper.style.display = 'none';
-        editToggleBtn.style.display = 'none';
-        controlsPanel.style.display = 'none';
-        isControlsOpen = false;
+      function showConfirm(title, body, confirmLabel, onConfirm) {
+        msgModalTitle.textContent = title;
+        msgModalBody.textContent = body;
+        msgModalCancelBtn.classList.remove('hidden');
+        msgModalConfirmBtn.textContent = confirmLabel;
+        msgModalConfirmBtn.className = 'px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold';
+        msgModalIcon.className = 'w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 mt-0.5';
+        msgModalIcon.innerHTML = '<i class="fa-solid fa-trash-can text-lg"></i>';
+
+        messageModal.classList.remove('hidden');
+        messageModal.classList.add('flex');
+
+        msgModalCancelBtn.onclick = () => {
+          messageModal.classList.add('hidden');
+          messageModal.classList.remove('flex');
+        };
+
+        msgModalConfirmBtn.onclick = () => {
+          messageModal.classList.add('hidden');
+          messageModal.classList.remove('flex');
+          if (typeof onConfirm === 'function') onConfirm();
+        };
       }
-    }
 
-    window.addEventListener('resize', () => {
-       if(pages.length > 0 && currentView === 'single') {
-           if(window.innerWidth <= 768) {
-               editToggleBtn.style.display = 'flex';
-           } else {
-               editToggleBtn.style.display = 'none';
-               controlsPanel.classList.remove('open');
-               isControlsOpen = false;
-               controlsPanel.style.display = 'flex'; // Ensure visible on desktop
-           }
-       }
-    });
+      // -------------------- Mobile Bottom Sheet Management --------------------
 
-    function loadActivePage() {
-      if (activeIndex < 0 || activeIndex >= pages.length) { updateUIState(); return; }
-      updateUIState();
-      const p = pages[activeIndex];
-      
-      sliderBlackLevel.value = p.blackLevel;
-      sliderWhiteLevel.value = p.whiteLevel;
-      sliderSharpness.value = p.sharpness;
-      
-      valBlackLevel.textContent = p.blackLevel;
-      valWhiteLevel.textContent = p.whiteLevel;
-      valSharpness.textContent = p.sharpness;
+      function openMobileSheet() {
+        isSheetOpen = true;
+        controlsPanel.classList.add('sheet-open');
+      }
 
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === p.filter);
+      function closeMobileSheet() {
+        isSheetOpen = false;
+        controlsPanel.classList.remove('sheet-open');
+      }
+
+      editToggleBtn.addEventListener('click', () => {
+        if (isSheetOpen) closeMobileSheet();
+        else openMobileSheet();
       });
-      queueProcessAndDraw();
-    }
 
-    function queueProcessAndDraw() {
-        if(processTimeout) clearTimeout(processTimeout);
-        loadingOverlay.style.display = 'flex';
-        processTimeout = setTimeout(() => {
-            requestAnimationFrame(() => {
-                processAndDraw();
-                loadingOverlay.style.display = 'none';
-            });
-        }, 100); 
-    }
+      closeSheetBtn.addEventListener('click', closeMobileSheet);
 
-    // --- Image Processing Engine ---
+      // -------------------- Multi-Image File Upload --------------------
 
-    function processAndDraw(forceThumbnailUpdate = true) {
-      if (activeIndex < 0 || activeIndex >= pages.length) return;
-      const p = pages[activeIndex];
-      const img = p.img;
-      
-      const isRotated = (p.rotation / 90) % 2 !== 0;
-      const w = isRotated ? img.height : img.width;
-      const h = isRotated ? img.width : img.height;
-      
-      const MAX_DIM = 1600; 
-      let scale = 1;
-      if (w > MAX_DIM || h > MAX_DIM) { scale = Math.min(MAX_DIM/w, MAX_DIM/h); }
-      
-      const targetW = Math.floor(w * scale);
-      const targetH = Math.floor(h * scale);
-      mainCanvas.width = targetW;
-      mainCanvas.height = targetH;
-
-      ctx.save();
-      ctx.translate(targetW / 2, targetH / 2);
-      ctx.rotate((p.rotation * Math.PI) / 180);
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
-      ctx.restore();
-
-      if(p.filter === 'original') { 
-          if(forceThumbnailUpdate) updateActiveThumbnail(); 
-          return; 
+      function triggerFileUpload() {
+        fileInput.click();
       }
 
-      let imageData = ctx.getImageData(0, 0, targetW, targetH);
-      let pixels = imageData.data;
-      
-      if (p.filter === 'pencil_extreme') {
-          const bLevel = parseInt(p.blackLevel);
-          const wLevel = parseInt(p.whiteLevel);
-          const range = Math.max(1, wLevel - bLevel); 
+      [uploadBtnDesktop, uploadBtnMobile, emptyUploadBtn].forEach(btn => {
+        if (btn) btn.addEventListener('click', triggerFileUpload);
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        files.forEach(file => {
+          if (!file.type.startsWith('image/')) return;
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => addPage(img);
+            img.onerror = () => showMessage('Load Error', `Could not load image "${file.name}".`, 'error');
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+
+        fileInput.value = '';
+      });
+
+      // -------------------- Live High-Resolution Camera --------------------
+
+      async function openCameraModal() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showMessage(
+            'Camera Unavailable',
+            'Your browser does not support live camera access here. Please use the Upload button to select photos from your camera or gallery.',
+            'warning'
+          );
+          return;
+        }
+
+        try {
+          // Primary attempt: Rear camera at 4K ideal resolution with continuous autofocus
+          activeCameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 4096 },
+              height: { ideal: 2160 },
+              advanced: [{ focusMode: 'continuous' }]
+            },
+            audio: false
+          });
+        } catch (primaryErr) {
+          try {
+            // Fallback attempt: Standard rear camera constraint
+            activeCameraStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: 'environment' },
+              audio: false
+            });
+          } catch (fallbackErr) {
+            try {
+              // Last fallback: Any available camera
+              activeCameraStream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+              });
+            } catch (finalErr) {
+              showMessage(
+                'Camera Permission Denied',
+                'Please allow camera access in your browser settings, or use the Upload button to take a photo using your phone camera app.',
+                'error'
+              );
+              return;
+            }
+          }
+        }
+
+        webcamVideo.srcObject = activeCameraStream;
+        camModal.classList.remove('hidden');
+        camModal.classList.add('flex');
+      }
+
+      function stopCameraModal() {
+        if (activeCameraStream) {
+          activeCameraStream.getTracks().forEach(track => track.stop());
+          activeCameraStream = null;
+        }
+        webcamVideo.srcObject = null;
+        camModal.classList.add('hidden');
+        camModal.classList.remove('flex');
+      }
+
+      [openCamBtnDesktop, openCamBtnMobile, emptyCamBtn].forEach(btn => {
+        if (btn) btn.addEventListener('click', openCameraModal);
+      });
+
+      closeCamBtn.addEventListener('click', stopCameraModal);
+
+      captureSnapBtn.addEventListener('click', () => {
+        const vw = webcamVideo.videoWidth;
+        const vh = webcamVideo.videoHeight;
+        if (!vw || !vh) {
+          showToast('Camera warming up, tap again');
+          return;
+        }
+
+        const snapCanvas = document.createElement('canvas');
+        snapCanvas.width = vw;
+        snapCanvas.height = vh;
+        const snapCtx = snapCanvas.getContext('2d');
+        snapCtx.drawImage(webcamVideo, 0, 0, vw, vh);
+
+        const img = new Image();
+        img.onload = () => {
+          addPage(img);
+          stopCameraModal();
+          showToast('Photo captured');
+        };
+        img.src = snapCanvas.toDataURL('image/jpeg', 0.98);
+      });
+
+      // -------------------- Page State & UI Synchronization --------------------
+
+      function addPage(imgElement) {
+        pages.push({
+          img: imgElement,
+          filter: 'pencil_extreme', // Default to Extreme Pencil
+          blackLevel: 80,
+          whiteLevel: 160,
+          threshold: 135,
+          sharpness: 60,
+          rotation: 0
+        });
+        activeIndex = pages.length - 1;
+        renderThumbnails();
+        loadActivePage();
+      }
+
+      function updateLayoutVisibility() {
+        const hasPages = pages.length > 0;
+
+        if (hasPages) {
+          emptyState.classList.add('hidden');
+          canvasWrapper.classList.remove('hidden');
+          canvasWrapper.classList.add('flex');
+          pageCounterPill.textContent = `Page ${activeIndex + 1} of ${pages.length}`;
+
+          moveLeftBtn.disabled = activeIndex <= 0;
+          moveRightBtn.disabled = activeIndex >= pages.length - 1;
+
+          if (window.innerWidth <= 768) {
+            editToggleBtn.classList.remove('hidden');
+            editToggleBtn.classList.add('flex');
+          } else {
+            editToggleBtn.classList.add('hidden');
+            editToggleBtn.classList.remove('flex');
+          }
+        } else {
+          emptyState.classList.remove('hidden');
+          canvasWrapper.classList.add('hidden');
+          canvasWrapper.classList.remove('flex');
+          editToggleBtn.classList.add('hidden');
+          editToggleBtn.classList.remove('flex');
+          closeMobileSheet();
+        }
+      }
+
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+          closeMobileSheet();
+        }
+        updateLayoutVisibility();
+      });
+
+      function loadActivePage() {
+        if (activeIndex < 0 || activeIndex >= pages.length) {
+          updateLayoutVisibility();
+          return;
+        }
+
+        updateLayoutVisibility();
+        const p = pages[activeIndex];
+
+        // Sync slider values & readouts
+        sliderBlackLevel.value = p.blackLevel;
+        sliderWhiteLevel.value = p.whiteLevel;
+        sliderThreshold.value = p.threshold;
+        sliderSharpness.value = p.sharpness;
+
+        valBlackLevel.textContent = p.blackLevel;
+        valWhiteLevel.textContent = p.whiteLevel;
+        valThreshold.textContent = p.threshold;
+        valSharpness.textContent = p.sharpness;
+
+        // Sync active filter buttons
+        const filterNames = {
+          pencil_extreme: 'Extreme Pencil',
+          magic_color: 'Magic Color',
+          magic_bw: 'Magic Pro B&W',
+          original: 'Original'
+        };
+        activeFilterBadge.textContent = filterNames[p.filter] || 'Extreme Pencil';
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          const isMatch = btn.dataset.filter === p.filter;
+          if (isMatch) {
+            btn.classList.add('active');
+            if (p.filter === 'pencil_extreme') {
+              btn.className = 'filter-btn active shrink-0 px-3 py-2.5 rounded-xl border border-rose-500 bg-rose-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5';
+            } else {
+              btn.className = 'filter-btn active shrink-0 px-3 py-2.5 rounded-xl border border-blue-500 bg-blue-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5';
+            }
+          } else {
+            btn.classList.remove('active');
+            btn.className = 'filter-btn shrink-0 px-3 py-2.5 rounded-xl border border-borderDark bg-panelDark hover:bg-slate-800 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5';
+          }
+        });
+
+        // Show relevant adjustment sliders per filter
+        pencilLevelsGroup.classList.toggle('hidden', p.filter !== 'pencil_extreme');
+        bwThresholdGroup.classList.toggle('hidden', p.filter !== 'magic_bw');
+        sharpnessGroup.classList.toggle('hidden', p.filter === 'original' || p.filter === 'magic_bw');
+
+        queueProcessAndDraw();
+      }
+
+      // -------------------- Real-Time Image Processing Engine --------------------
+
+      function queueProcessAndDraw() {
+        clearTimeout(processDebounceTimer);
+        loadingText.textContent = 'Enhancing clarity...';
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+
+        processDebounceTimer = setTimeout(() => {
+          requestAnimationFrame(() => {
+            try {
+              renderPageToCanvas(pages[activeIndex], mainCanvas, 1600, isComparingOriginal);
+              updateActiveThumbnail();
+            } catch (err) {
+              console.error('Canvas render error:', err);
+            } finally {
+              loadingOverlay.classList.add('hidden');
+              loadingOverlay.classList.remove('flex');
+            }
+          });
+        }, 65);
+      }
+
+      /**
+       * Renders a page object onto a target <canvas> at up to maxDim resolution.
+       * Used both for live interactive preview (1600px) and high-res PDF export (2200px).
+       */
+      function renderPageToCanvas(pageObj, targetCanvas, maxDim = 1600, forceOriginal = false) {
+        if (!pageObj) return;
+        const img = pageObj.img;
+        const targetCtx = targetCanvas.getContext('2d', { willReadFrequently: true });
+
+        const isRotated = (pageObj.rotation / 90) % 2 !== 0;
+        const rawW = isRotated ? img.height : img.width;
+        const rawH = isRotated ? img.width : img.height;
+
+        let scale = 1;
+        if (rawW > maxDim || rawH > maxDim) {
+          scale = Math.min(maxDim / rawW, maxDim / rawH);
+        }
+
+        const targetW = Math.max(1, Math.floor(rawW * scale));
+        const targetH = Math.max(1, Math.floor(rawH * scale));
+
+        targetCanvas.width = targetW;
+        targetCanvas.height = targetH;
+
+        targetCtx.save();
+        targetCtx.translate(targetW / 2, targetH / 2);
+        targetCtx.rotate((pageObj.rotation * Math.PI) / 180);
+        targetCtx.scale(scale, scale);
+        targetCtx.drawImage(img, -img.width / 2, -img.height / 2);
+        targetCtx.restore();
+
+        if (forceOriginal || pageObj.filter === 'original') {
+          return;
+        }
+
+        let imageData = targetCtx.getImageData(0, 0, targetW, targetH);
+        const pixels = imageData.data;
+
+        if (pageObj.filter === 'pencil_extreme') {
+          // Grayscale Levels LUT: maps [blackLevel..whiteLevel] -> [0..255]
+          const bLevel = parseInt(pageObj.blackLevel, 10);
+          const wLevel = parseInt(pageObj.whiteLevel, 10);
+          const range = Math.max(1, wLevel - bLevel);
+
           const levelsLUT = new Uint8Array(256);
           for (let i = 0; i < 256; i++) {
-              if (i <= bLevel) { levelsLUT[i] = 0; } 
-              else if (i >= wLevel) { levelsLUT[i] = 255; } 
-              else { levelsLUT[i] = Math.floor(((i - bLevel) / range) * 255); }
-          }
-          for (let i = 0; i < pixels.length; i += 4) {
-              let luma = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
-              let finalVal = levelsLUT[Math.floor(luma)];
-              pixels[i] = finalVal; pixels[i+1] = finalVal; pixels[i+2] = finalVal;
-          }
-      } else {
-          const thresh = 128;
-          for (let i = 0; i < pixels.length; i += 4) {
-            let r = pixels[i], g = pixels[i + 1], bVal = pixels[i + 2];
-            let luma = 0.299 * r + 0.587 * g + 0.114 * bVal;
-            if (p.filter === 'magic_color') {
-              if (luma > 150) { r = Math.min(255, r * 1.25 + 20); g = Math.min(255, g * 1.25 + 20); bVal = Math.min(255, bVal * 1.25 + 20); } 
-              else { r = Math.max(0, r * 0.85); g = Math.max(0, g * 0.85); bVal = Math.max(0, bVal * 0.85); }
-            } else if (p.filter === 'magic_bw') {
-              let val = luma >= thresh ? 255 : 0; r = g = bVal = val;
+            if (i <= bLevel) {
+              levelsLUT[i] = 0;
+            } else if (i >= wLevel) {
+              levelsLUT[i] = 255;
+            } else {
+              levelsLUT[i] = Math.floor(((i - bLevel) / range) * 255);
             }
-            pixels[i] = r; pixels[i + 1] = g; pixels[i + 2] = bVal;
           }
-      }
 
-      const sharpnessAmount = parseInt(p.sharpness);
-      if (sharpnessAmount > 0 && p.filter !== 'magic_bw') {
-          imageData = applyVariableSharpen(imageData, targetW, targetH, sharpnessAmount);
-      }
+          for (let i = 0; i < pixels.length; i += 4) {
+            const luma = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+            const mapped = levelsLUT[Math.floor(luma)];
+            pixels[i] = mapped;
+            pixels[i + 1] = mapped;
+            pixels[i + 2] = mapped;
+          }
+        } else if (pageObj.filter === 'magic_color') {
+          // Magic Color: whiten light paper backgrounds while deepening dark ink & enhancing color saturation
+          for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i];
+            let g = pixels[i + 1];
+            let b = pixels[i + 2];
+            const luma = 0.299 * r + 0.587 * g + 0.114 * b;
 
-      ctx.putImageData(imageData, 0, 0);
-      if(forceThumbnailUpdate) updateActiveThumbnail();
-    }
+            if (luma > 148) {
+              // Whiten paper background smoothly
+              r = Math.min(255, r * 1.24 + 24);
+              g = Math.min(255, g * 1.24 + 24);
+              b = Math.min(255, b * 1.24 + 24);
+            } else {
+              // Deepen text ink and boost saturation
+              const avg = (r + g + b) / 3;
+              const satBoost = 1.25;
+              r = (avg + (r - avg) * satBoost) * 0.84;
+              g = (avg + (g - avg) * satBoost) * 0.84;
+              b = (avg + (b - avg) * satBoost) * 0.84;
+            }
 
-    function applyVariableSharpen(imageData, w, h, amount) {
-      const strength = amount / 50.0; 
-      if (strength <= 0) return imageData;
-      const src = imageData.data;
-      const output = new ImageData(new Uint8ClampedArray(src), w, h);
-      const dst = output.data;
-      const centerWeight = 1 + (4 * strength);
-      const edgeWeight = -strength;
-
-      for (let y = 1; y < h - 1; y++) {
-        for (let x = 1; x < w - 1; x++) {
-          const idx = (y * w + x) * 4;
-          const idxT = ((y-1) * w + x) * 4; const idxB = ((y+1) * w + x) * 4;
-          const idxL = (y * w + (x-1)) * 4; const idxR = (y * w + (x+1)) * 4;
-          for (let c = 0; c < 3; c++) {
-              let val = src[idx + c] * centerWeight + src[idxT + c] * edgeWeight + src[idxB + c] * edgeWeight + src[idxL + c] * edgeWeight + src[idxR + c] * edgeWeight;
-              dst[idx + c] = Math.min(255, Math.max(0, val));
+            pixels[i] = Math.min(255, Math.max(0, r));
+            pixels[i + 1] = Math.min(255, Math.max(0, g));
+            pixels[i + 2] = Math.min(255, Math.max(0, b));
+          }
+        } else if (pageObj.filter === 'magic_bw') {
+          // Magic Pro B&W: high-contrast binary scan
+          const thresh = parseInt(pageObj.threshold, 10) || 135;
+          for (let i = 0; i < pixels.length; i += 4) {
+            const luma = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+            const bin = luma >= thresh ? 255 : 0;
+            pixels[i] = bin;
+            pixels[i + 1] = bin;
+            pixels[i + 2] = bin;
           }
         }
-      }
-      return output;
-    }
 
-
-    // --- Thumbnail Management ---
-    function updateActiveThumbnail() {
-        if (activeIndex >= 0 && activeIndex < pages.length) {
-            // Very low quality for UI thumb
-            pages[activeIndex].thumbActive = mainCanvas.toDataURL('image/jpeg', 0.2);
-            
-            // Update Single View Thumbnail
-            const activeCard = thumbBar.children[activeIndex];
-            if (activeCard) {
-                const img = activeCard.querySelector('img');
-                img.src = pages[activeIndex].thumbActive;
-            }
-            
-            // Update Grid View Thumbnail if active
-            if (currentView === 'grid') {
-                 const gridCard = document.querySelector(`.grid-item[data-id="${pages[activeIndex].id}"] img`);
-                 if(gridCard) gridCard.src = pages[activeIndex].thumbActive;
-            }
+        // Apply 3x3 Laplacian Sharpening Convolution Matrix
+        const sharpnessAmount = parseInt(pageObj.sharpness, 10);
+        if (sharpnessAmount > 0 && pageObj.filter !== 'magic_bw') {
+          imageData = applyLaplacianSharpen(imageData, targetW, targetH, sharpnessAmount);
         }
-    }
 
-    function renderThumbnails() {
-      thumbBar.innerHTML = '';
-      pages.forEach((p, idx) => {
-        const card = document.createElement('div');
-        card.className = `thumb-card ${idx === activeIndex ? 'active' : ''}`;
-        
-        const img = document.createElement('img');
-        img.src = p.thumbActive; 
-        
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = `P${idx + 1}`;
+        targetCtx.putImageData(imageData, 0, 0);
+      }
 
-        card.appendChild(img);
-        card.appendChild(badge);
+      /**
+       * 3x3 Laplacian edge sharpening convolution matrix
+       */
+      function applyLaplacianSharpen(imageData, w, h, amount) {
+        const strength = amount / 50.0; // Range: 0.0 to 2.0
+        if (strength <= 0) return imageData;
 
-        card.onclick = () => {
-          activeIndex = idx;
-          renderThumbnails();
+        const src = imageData.data;
+        const output = new ImageData(new Uint8ClampedArray(src), w, h);
+        const dst = output.data;
+
+        const centerWeight = 1 + 4 * strength;
+        const edgeWeight = -strength;
+
+        for (let y = 1; y < h - 1; y++) {
+          const rowOffset = y * w;
+          const prevRow = (y - 1) * w;
+          const nextRow = (y + 1) * w;
+
+          for (let x = 1; x < w - 1; x++) {
+            const idx = (rowOffset + x) * 4;
+            const idxT = (prevRow + x) * 4;
+            const idxB = (nextRow + x) * 4;
+            const idxL = (rowOffset + (x - 1)) * 4;
+            const idxR = (rowOffset + (x + 1)) * 4;
+
+            for (let c = 0; c < 3; c++) {
+              const val =
+                src[idx + c] * centerWeight +
+                src[idxT + c] * edgeWeight +
+                src[idxB + c] * edgeWeight +
+                src[idxL + c] * edgeWeight +
+                src[idxR + c] * edgeWeight;
+
+              dst[idx + c] = val < 0 ? 0 : val > 255 ? 255 : val;
+            }
+          }
+        }
+        return output;
+      }
+
+      // -------------------- Filter & Slider Event Listeners --------------------
+
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (activeIndex < 0) return;
+          const chosenFilter = btn.dataset.filter;
+          pages[activeIndex].filter = chosenFilter;
+
+          if (chosenFilter === 'pencil_extreme') {
+            pages[activeIndex].blackLevel = 80;
+            pages[activeIndex].whiteLevel = 160;
+            pages[activeIndex].sharpness = 60;
+          } else if (chosenFilter === 'magic_color') {
+            pages[activeIndex].sharpness = 45;
+          }
+
           loadActivePage();
-        };
-        thumbBar.appendChild(card);
+        });
       });
-    }
 
-    // --- Drag and Drop Grid Management ---
-
-    let dragSourceElement = null;
-
-    function renderGrid() {
-        gridContainer.innerHTML = '';
-        
-        pages.forEach((p, idx) => {
-            const item = document.createElement('div');
-            item.className = 'grid-item';
-            item.draggable = true;
-            item.dataset.index = idx;
-            item.dataset.id = p.id;
-            
-            const img = document.createElement('img');
-            img.src = p.thumbActive;
-            img.draggable = false;
-            
-            const label = document.createElement('div');
-            label.className = 'page-num';
-            label.textContent = `Page ${idx + 1}`;
-            
-            const delBtn = document.createElement('button');
-            delBtn.className = 'delete-btn';
-            delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-            delBtn.onclick = (e) => {
-                e.stopPropagation(); // prevent clicking item
-                if (confirm("Delete this page?")) {
-                    pages.splice(idx, 1);
-                    // Fix active index if needed
-                    if(activeIndex === idx) activeIndex = Math.max(0, idx - 1);
-                    else if (activeIndex > idx) activeIndex--;
-                    
-                    if(pages.length === 0) activeIndex = -1;
-                    
-                    renderGrid();
-                    updateUIState();
-                }
-            };
-            
-            item.appendChild(img);
-            item.appendChild(label);
-            item.appendChild(delBtn);
-            
-            // Click to edit
-            item.onclick = () => {
-                activeIndex = idx;
-                switchView('single');
-            };
-            
-            // Drag Events
-            item.addEventListener('dragstart', handleDragStart);
-            item.addEventListener('dragover', handleDragOver);
-            item.addEventListener('dragleave', handleDragLeave);
-            item.addEventListener('drop', handleDrop);
-            item.addEventListener('dragend', handleDragEnd);
-
-            gridContainer.appendChild(item);
-        });
-    }
-
-    function handleDragStart(e) {
-        dragSourceElement = this;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', this.dataset.index);
-        this.classList.add('dragging');
-    }
-
-    function handleDragOver(e) {
-        if (e.preventDefault) e.preventDefault(); 
-        e.dataTransfer.dropEffect = 'move';
-        if(this !== dragSourceElement) {
-            this.classList.add('drag-over');
+      sliderBlackLevel.addEventListener('input', (e) => {
+        let val = parseInt(e.target.value, 10);
+        const whiteVal = parseInt(sliderWhiteLevel.value, 10);
+        if (val >= whiteVal) {
+          val = whiteVal - 1;
+          e.target.value = val;
         }
-        return false;
-    }
-
-    function handleDragLeave(e) {
-        this.classList.remove('drag-over');
-    }
-
-    function handleDrop(e) {
-        if (e.stopPropagation) e.stopPropagation();
-        this.classList.remove('drag-over');
-        
-        if (dragSourceElement !== this) {
-            const sourceIndex = parseInt(dragSourceElement.dataset.index);
-            const targetIndex = parseInt(this.dataset.index);
-            
-            // Reorder array
-            const movedItem = pages.splice(sourceIndex, 1)[0];
-            pages.splice(targetIndex, 0, movedItem);
-            
-            // If active item was moved, track it. Otherwise, track where active item ended up
-            if (activeIndex === sourceIndex) {
-                activeIndex = targetIndex;
-            } else if (activeIndex > sourceIndex && activeIndex <= targetIndex) {
-                activeIndex--;
-            } else if (activeIndex < sourceIndex && activeIndex >= targetIndex) {
-                activeIndex++;
-            }
-            
-            renderGrid(); // Re-render visually
+        valBlackLevel.textContent = val;
+        if (activeIndex >= 0) {
+          pages[activeIndex].blackLevel = val;
+          queueProcessAndDraw();
         }
-        return false;
-    }
+      });
 
-    function handleDragEnd(e) {
-        this.classList.remove('dragging');
-        document.querySelectorAll('.grid-item').forEach(el => {
-            el.classList.remove('drag-over');
-        });
-    }
-
-
-    // --- Single View Controls Events ---
-
-    moveLeftBtn.onclick = () => {
-        if (activeIndex > 0) {
-            let temp = pages[activeIndex - 1];
-            pages[activeIndex - 1] = pages[activeIndex];
-            pages[activeIndex] = temp;
-            activeIndex--;
-            renderThumbnails(); loadActivePage();
+      sliderWhiteLevel.addEventListener('input', (e) => {
+        let val = parseInt(e.target.value, 10);
+        const blackVal = parseInt(sliderBlackLevel.value, 10);
+        if (val <= blackVal) {
+          val = blackVal + 1;
+          e.target.value = val;
         }
-    };
-    moveRightBtn.onclick = () => {
-        if (activeIndex < pages.length - 1) {
-            let temp = pages[activeIndex + 1];
-            pages[activeIndex + 1] = pages[activeIndex];
-            pages[activeIndex] = temp;
-            activeIndex++;
-            renderThumbnails(); loadActivePage();
+        valWhiteLevel.textContent = val;
+        if (activeIndex >= 0) {
+          pages[activeIndex].whiteLevel = val;
+          queueProcessAndDraw();
         }
-    };
-    deletePageBtn.onclick = () => {
-        if (activeIndex >= 0 && confirm("Are you sure you want to delete this page?")) {
-            pages.splice(activeIndex, 1);
-            if(pages.length === 0) { activeIndex = -1; } 
-            else if (activeIndex >= pages.length) { activeIndex = pages.length - 1; }
-            renderThumbnails(); loadActivePage();
-        }
-    };
+      });
 
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.onclick = () => {
+      sliderThreshold.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        valThreshold.textContent = val;
+        if (activeIndex >= 0) {
+          pages[activeIndex].threshold = val;
+          queueProcessAndDraw();
+        }
+      });
+
+      sliderSharpness.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        valSharpness.textContent = val;
+        if (activeIndex >= 0) {
+          pages[activeIndex].sharpness = val;
+          queueProcessAndDraw();
+        }
+      });
+
+      // Hold-to-compare original photo
+      const startCompare = (e) => {
+        e.preventDefault();
         if (activeIndex < 0) return;
-        const filterType = btn.dataset.filter;
-        pages[activeIndex].filter = filterType;
-        if (filterType === 'pencil_extreme') {
-          pages[activeIndex].blackLevel = 80;
-          pages[activeIndex].whiteLevel = 160;
-          pages[activeIndex].sharpness = 60;
-        } 
-        loadActivePage();
+        isComparingOriginal = true;
+        renderPageToCanvas(pages[activeIndex], mainCanvas, 1600, true);
       };
-    });
+      const endCompare = () => {
+        if (!isComparingOriginal || activeIndex < 0) return;
+        isComparingOriginal = false;
+        renderPageToCanvas(pages[activeIndex], mainCanvas, 1600, false);
+      };
 
-    sliderBlackLevel.oninput = (e) => {
-        if(parseInt(e.target.value) >= parseInt(sliderWhiteLevel.value)) { e.target.value = parseInt(sliderWhiteLevel.value) - 1; }
-        valBlackLevel.textContent = e.target.value;
-        if (activeIndex >= 0) { pages[activeIndex].blackLevel = e.target.value; queueProcessAndDraw(); }
-    };
-    sliderWhiteLevel.oninput = (e) => {
-        if(parseInt(e.target.value) <= parseInt(sliderBlackLevel.value)) { e.target.value = parseInt(sliderBlackLevel.value) + 1; }
-        valWhiteLevel.textContent = e.target.value;
-        if (activeIndex >= 0) { pages[activeIndex].whiteLevel = e.target.value; queueProcessAndDraw(); }
-    };
-    sliderSharpness.oninput = (e) => {
-      valSharpness.textContent = e.target.value;
-      if (activeIndex >= 0) { pages[activeIndex].sharpness = e.target.value; queueProcessAndDraw(); }
-    };
-    document.getElementById('rotateLeftBtn').onclick = () => {
-      if (activeIndex < 0) return; pages[activeIndex].rotation = (pages[activeIndex].rotation - 90 + 360) % 360; loadActivePage();
-    };
-    document.getElementById('rotateRightBtn').onclick = () => {
-      if (activeIndex < 0) return; pages[activeIndex].rotation = (pages[activeIndex].rotation + 90) % 360; loadActivePage();
-    };
+      compareOriginalBtn.addEventListener('mousedown', startCompare);
+      compareOriginalBtn.addEventListener('touchstart', startCompare, { passive: false });
+      window.addEventListener('mouseup', endCompare);
+      window.addEventListener('touchend', endCompare);
 
-    clearAllBtn.onclick = () => {
-      if (confirm('Delete all scanned pages?')) {
-        pages = []; activeIndex = -1; 
-        renderThumbnails(); 
-        if(currentView === 'grid') renderGrid();
-        updateUIState();
-      }
-    };
+      // -------------------- Page Rotation, Reordering & Deletion --------------------
 
-
-    // --- PDF Export & Share Logic ---
-
-    exportPdfBtn.onclick = () => {
-      if (pages.length === 0) { alert('Please add at least one scanned image before exporting.'); return; }
-      const dateStr = new Date().toISOString().slice(0, 10);
-      fileNameInput.value = `Scanned_Notes_${dateStr}`;
-      exportModal.style.display = 'flex';
-      
-      if(isControlsOpen) {
-          controlsPanel.classList.remove('open');
-          editToggleBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Adjust Page';
-          editToggleBtn.classList.replace('btn-success', 'btn-secondary');
-          isControlsOpen = false;
-      }
-    };
-
-    cancelExportBtn.onclick = () => { exportModal.style.display = 'none'; };
-
-    function getFileName() {
-        let name = fileNameInput.value.trim();
-        if(name === '') name = 'Scanned_Document';
-        if(!name.toLowerCase().endsWith('.pdf')) name += '.pdf';
-        return name;
-    }
-
-    function generatePDF() {
-      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const originalIndex = activeIndex;
-      
-      // Make sure we generate using the latest UI state
-      let currentOriginalView = currentView;
-      
-      // We need to render the pages one by one for the PDF
-      pages.forEach((p, i) => {
-        if (i > 0) pdf.addPage();
-        activeIndex = i;
-        processAndDraw(false); // False = don't update thumbnail during export for speed
-        
-        const imgData = mainCanvas.toDataURL('image/jpeg', 0.85); 
-        const imgProps = pdf.getImageProperties(imgData);
-        const ratio = imgProps.width / imgProps.height;
-        let printW = pdfWidth; let printH = pdfWidth / ratio;
-        
-        if (printH > pdfHeight) { printH = pdfHeight; printW = pdfHeight * ratio; }
-        
-        const xOffset = (pdfWidth - printW) / 2;
-        const yOffset = (pdfHeight - printH) / 2;
-        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
+      rotateLeftBtn.addEventListener('click', () => {
+        if (activeIndex < 0) return;
+        pages[activeIndex].rotation = (pages[activeIndex].rotation - 90 + 360) % 360;
+        loadActivePage();
       });
 
-      // Restore State
-      activeIndex = originalIndex;
-      if(activeIndex >= 0) {
-          processAndDraw(false);
-      }
-      
-      return pdf;
-    }
+      rotateRightBtn.addEventListener('click', () => {
+        if (activeIndex < 0) return;
+        pages[activeIndex].rotation = (pages[activeIndex].rotation + 90) % 360;
+        loadActivePage();
+      });
 
-    saveExportBtn.onclick = () => {
-      exportModal.style.display = 'none';
-      const fName = getFileName();
-      loadingOverlay.querySelector('span').textContent = "Saving PDF...";
-      loadingOverlay.style.display = 'flex';
+      moveLeftBtn.addEventListener('click', () => {
+        if (activeIndex <= 0) return;
+        const temp = pages[activeIndex - 1];
+        pages[activeIndex - 1] = pages[activeIndex];
+        pages[activeIndex] = temp;
+        activeIndex--;
+        renderThumbnails();
+        loadActivePage();
+        showToast(`Moved to Page ${activeIndex + 1}`);
+      });
 
-      setTimeout(() => {
-          const pdf = generatePDF();
-          pdf.save(fName);
-          loadingOverlay.style.display = 'none';
-          loadingOverlay.querySelector('span').textContent = "Processing...";
-      }, 50);
-    };
+      moveRightBtn.addEventListener('click', () => {
+        if (activeIndex < 0 || activeIndex >= pages.length - 1) return;
+        const temp = pages[activeIndex + 1];
+        pages[activeIndex + 1] = pages[activeIndex];
+        pages[activeIndex] = temp;
+        activeIndex++;
+        renderThumbnails();
+        loadActivePage();
+        showToast(`Moved to Page ${activeIndex + 1}`);
+      });
 
-    shareExportBtn.onclick = () => {
-      exportModal.style.display = 'none';
-      const fName = getFileName();
-      loadingOverlay.querySelector('span').textContent = "Preparing PDF to Share...";
-      loadingOverlay.style.display = 'flex';
-
-      setTimeout(async () => {
-          const pdf = generatePDF();
-          try {
-              const pdfBlob = pdf.output('blob');
-              const fileToShare = new File([pdfBlob], fName, { type: 'application/pdf' });
-              
-              if (navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
-                  await navigator.share({
-                      title: fName,
-                      files: [fileToShare]
-                  });
-              } else {
-                  alert("Your browser does not support sharing PDF files directly. We will download it instead.");
-                  pdf.save(fName);
-              }
-          } catch (error) {
-              console.log('Error sharing:', error);
-          } finally {
-              loadingOverlay.style.display = 'none';
-              loadingOverlay.querySelector('span').textContent = "Processing...";
+      deletePageBtn.addEventListener('click', () => {
+        if (activeIndex < 0) return;
+        showConfirm(
+          'Delete Page?',
+          `Remove Page ${activeIndex + 1} from this document?`,
+          'Delete',
+          () => {
+            pages.splice(activeIndex, 1);
+            if (pages.length === 0) {
+              activeIndex = -1;
+            } else if (activeIndex >= pages.length) {
+              activeIndex = pages.length - 1;
+            }
+            renderThumbnails();
+            loadActivePage();
+            showToast('Page deleted');
           }
-      }, 50);
-    };
+        );
+      });
 
-    // Initial state
-    updateUIState();
+      clearAllBtn.addEventListener('click', () => {
+        if (pages.length === 0) {
+          showToast('No pages to clear');
+          return;
+        }
+        showConfirm(
+          'Clear All Pages?',
+          `This will remove all ${pages.length} scanned page(s).`,
+          'Clear All',
+          () => {
+            pages = [];
+            activeIndex = -1;
+            renderThumbnails();
+            updateLayoutVisibility();
+            showToast('All pages cleared');
+          }
+        );
+      });
+
+      // -------------------- Bottom Thumbnail Carousel --------------------
+
+      function renderThumbnails() {
+        thumbBar.innerHTML = '';
+
+        pages.forEach((p, idx) => {
+          const isActive = idx === activeIndex;
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = `relative h-[62px] w-[48px] rounded-lg overflow-hidden shrink-0 border-2 transition ${
+            isActive ? 'border-blue-500 ring-2 ring-blue-500/30 scale-105' : 'border-slate-700 opacity-75 hover:opacity-100'
+          } bg-black`;
+
+          const img = document.createElement('img');
+          img.src = p.thumbUrl || p.img.src;
+          img.alt = `Page ${idx + 1}`;
+          img.className = 'w-full h-full object-cover';
+
+          const badge = document.createElement('span');
+          badge.className = `absolute bottom-0.5 right-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold ${
+            isActive ? 'bg-blue-600 text-white' : 'bg-black/80 text-slate-200'
+          }`;
+          badge.textContent = `P${idx + 1}`;
+
+          card.appendChild(img);
+          card.appendChild(badge);
+
+          card.addEventListener('click', () => {
+            activeIndex = idx;
+            renderThumbnails();
+            loadActivePage();
+          });
+
+          thumbBar.appendChild(card);
+        });
+
+        // Add "+ Add Page" quick button at the end of carousel when pages exist
+        if (pages.length > 0) {
+          const addMoreBtn = document.createElement('button');
+          addMoreBtn.type = 'button';
+          addMoreBtn.title = 'Add another page';
+          addMoreBtn.className = 'h-[62px] w-[48px] rounded-lg border-2 border-dashed border-slate-700 hover:border-blue-500 text-slate-400 hover:text-blue-400 shrink-0 flex flex-col items-center justify-center gap-0.5 transition';
+          addMoreBtn.innerHTML = '<i class="fa-solid fa-plus text-sm"></i><span class="text-[9px] font-semibold">Add</span>';
+          addMoreBtn.addEventListener('click', triggerFileUpload);
+          thumbBar.appendChild(addMoreBtn);
+        }
+      }
+
+      function updateActiveThumbnail() {
+        if (activeIndex < 0 || activeIndex >= pages.length) return;
+        const thumbDataUrl = mainCanvas.toDataURL('image/jpeg', 0.35);
+        pages[activeIndex].thumbUrl = thumbDataUrl;
+        const card = thumbBar.children[activeIndex];
+        if (card) {
+          const img = card.querySelector('img');
+          if (img) img.src = thumbDataUrl;
+        }
+      }
+
+      // -------------------- PDF Compilation & Direct Sharing (WhatsApp / Telegram / More) --------------------
+
+      function getDefaultFileName() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        return `Scanned_Notes_${yyyy}-${mm}-${dd}`;
+      }
+
+      function sanitizePdfFileName(rawName) {
+        let clean = (rawName || '').trim().replace(/[\\/:*?"<>|]/g, '_');
+        if (!clean) clean = getDefaultFileName();
+        if (!clean.toLowerCase().endsWith('.pdf')) {
+          clean += '.pdf';
+        }
+        return clean;
+      }
+
+      openExportModalBtn.addEventListener('click', () => {
+        if (pages.length === 0) {
+          showMessage(
+            'No Pages Scanned',
+            'Please capture a photo or upload at least one document image before exporting or sharing a PDF.',
+            'info'
+          );
+          return;
+        }
+
+        closeMobileSheet();
+        fileNameInput.value = getDefaultFileName();
+        exportPageCountText.textContent = `${pages.length} page${pages.length > 1 ? 's' : ''} ready to compile`;
+        exportModal.classList.remove('hidden');
+        exportModal.classList.add('flex');
+      });
+
+      cancelExportBtn.addEventListener('click', () => {
+        exportModal.classList.add('hidden');
+        exportModal.classList.remove('flex');
+      });
+
+      /**
+       * Compiles all enhanced pages into a multi-page A4 jsPDF instance.
+       */
+      function buildMultiPagePdf() {
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const offscreenCanvas = document.createElement('canvas');
+
+        pages.forEach((pageObj, idx) => {
+          if (idx > 0) pdf.addPage();
+
+          // Render at crisp high-resolution (2200px max edge) for PDF export
+          renderPageToCanvas(pageObj, offscreenCanvas, 2200, false);
+          const imgData = offscreenCanvas.toDataURL('image/jpeg', 0.9);
+
+          const imgRatio = offscreenCanvas.width / offscreenCanvas.height;
+          let renderW = pdfWidth;
+          let renderH = pdfWidth / imgRatio;
+
+          if (renderH > pdfHeight) {
+            renderH = pdfHeight;
+            renderW = pdfHeight * imgRatio;
+          }
+
+          const offsetX = (pdfWidth - renderW) / 2;
+          const offsetY = (pdfHeight - renderH) / 2;
+
+          pdf.addImage(imgData, 'JPEG', offsetX, offsetY, renderW, renderH);
+        });
+
+        return pdf;
+      }
+
+      /**
+       * Shares the generated PDF File directly via Web Share API (passing ONLY files: [file]
+       * so WhatsApp and Telegram reliably accept the PDF attachment on Android & iOS).
+       */
+      async function handleDirectPdfShare(targetAppLabel) {
+        exportModal.classList.add('hidden');
+        exportModal.classList.remove('flex');
+
+        const fileName = sanitizePdfFileName(fileNameInput.value);
+        loadingText.textContent = `Preparing PDF for ${targetAppLabel}...`;
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+
+        // Yield to UI so loading spinner renders cleanly
+        await new Promise(resolve => setTimeout(resolve, 60));
+
+        try {
+          const pdf = buildMultiPagePdf();
+          const blob = pdf.output('blob');
+          const file = new File([blob], fileName, { type: 'application/pdf' });
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            // Pass ONLY { files: [file] } so WhatsApp & Telegram attach the PDF properly
+            await navigator.share({ files: [file] });
+            showToast(`Shared ${fileName}`);
+          } else {
+            // Fallback when opened locally via file:// or on desktop browsers without file sharing
+            pdf.save(fileName);
+            showMessage(
+              'PDF Downloaded for Sharing',
+              `Direct app sharing to ${targetAppLabel} requires a secure HTTPS mobile browser. Your PDF "${fileName}" has been downloaded automatically so you can attach it directly in ${targetAppLabel}!`,
+              'warning'
+            );
+          }
+        } catch (err) {
+          // Ignore AbortError when user cancels the native share sheet
+          if (err && err.name !== 'AbortError') {
+            console.error('Share error:', err);
+            showMessage(
+              'Share Interrupted',
+              'Could not open the share menu. Try using "Save PDF" to download the file instead.',
+              'error'
+            );
+          }
+        } finally {
+          loadingOverlay.classList.add('hidden');
+          loadingOverlay.classList.remove('flex');
+        }
+      }
+
+      shareWhatsAppBtn.addEventListener('click', () => handleDirectPdfShare('WhatsApp'));
+      shareTelegramBtn.addEventListener('click', () => handleDirectPdfShare('Telegram'));
+      shareMoreAppsBtn.addEventListener('click', () => handleDirectPdfShare('More Apps'));
+
+      savePdfBtn.addEventListener('click', async () => {
+        exportModal.classList.add('hidden');
+        exportModal.classList.remove('flex');
+
+        const fileName = sanitizePdfFileName(fileNameInput.value);
+        loadingText.textContent = 'Generating PDF...';
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+
+        await new Promise(resolve => setTimeout(resolve, 60));
+
+        try {
+          const pdf = buildMultiPagePdf();
+          pdf.save(fileName);
+          showToast(`Saved ${fileName}`);
+        } catch (err) {
+          console.error('PDF save error:', err);
+          showMessage('Export Failed', 'An error occurred while generating your PDF.', 'error');
+        } finally {
+          loadingOverlay.classList.add('hidden');
+          loadingOverlay.classList.remove('flex');
+        }
+      });
+
+      // Initialize UI state
+      updateLayoutVisibility();
+    })();
   </script>
 </body>
 </html>
