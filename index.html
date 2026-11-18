@@ -11,6 +11,7 @@
     :root {
       --bg-dark: #121826;
       --bg-card: #1b2436;
+      --bg-grid: #0f172a;
       --accent: #2563eb;
       --accent-hover: #1d4ed8;
       --text: #f3f4f6;
@@ -81,7 +82,30 @@
     .btn-icon-only { padding: 8px 12px; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Layout */
+    /* View Toggle Button */
+    .view-toggle-btn {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+      display: flex;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .view-toggle-option {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+    .view-toggle-option.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* Layout Container */
     .app-container {
       display: flex;
       flex: 1;
@@ -125,9 +149,7 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    .filter-scroll::-webkit-scrollbar {
-      display: none;
-    }
+    .filter-scroll::-webkit-scrollbar { display: none; }
 
     .filter-btn {
       background: #26334d;
@@ -142,19 +164,13 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
-
     .filter-btn.active, .filter-btn:hover {
       border-color: var(--accent);
       background: var(--accent);
       color: white;
     }
-    .filter-btn[data-filter="pencil_extreme"] {
-      border-color: #ef4444; 
-    }
-    .filter-btn[data-filter="pencil_extreme"].active {
-      background: #ef4444;
-      color: #fff;
-    }
+    .filter-btn[data-filter="pencil_extreme"] { border-color: #ef4444; }
+    .filter-btn[data-filter="pencil_extreme"].active { background: #ef4444; color: #fff; }
 
     .slider-group {
       display: flex;
@@ -162,34 +178,34 @@
       gap: 6px;
       font-size: 0.85rem;
     }
-
-    .slider-group label {
-      display: flex;
-      justify-content: space-between;
-    }
-
+    .slider-group label { display: flex; justify-content: space-between; }
     input[type="range"] { width: 100%; accent-color: var(--accent); }
-    
     input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--bg-dark);
-      color: white;
-      font-size: 1rem;
+      width: 100%; padding: 10px; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--bg-dark); color: white; font-size: 1rem;
     }
     input[type="text"]:focus { outline: none; border-color: var(--accent); }
 
-    /* Main Preview Area */
-    .preview-area {
+
+    /* --- VIEWS --- */
+
+    /* Main Viewport Container */
+    .main-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--bg-grid);
+    }
+
+    /* 1. Single Page Detail View */
+    .view-single {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 10px;
-      background: #0f172a;
       position: relative;
       overflow: auto;
     }
@@ -204,7 +220,6 @@
       justify-content: center;
       align-items: center;
     }
-
     canvas {
       max-width: 100%;
       max-height: 100%;
@@ -212,7 +227,82 @@
       object-fit: contain;
     }
 
-    /* Bottom Thumbnail Carousel */
+    /* 2. Grid Outline View (For Reordering) */
+    .view-grid {
+      display: none; /* hidden by default */
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      align-items: flex-start;
+      align-content: flex-start;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .grid-item {
+      background: white;
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: grab;
+      position: relative;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+      user-select: none;
+    }
+    .grid-item:active { cursor: grabbing; }
+    .grid-item.dragging {
+      opacity: 0.5;
+      transform: scale(1.05);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+    }
+    .grid-item.drag-over {
+      border: 2px dashed var(--accent);
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: 160px;
+      object-fit: contain;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .grid-item .page-num {
+      color: #334155;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .grid-item .delete-btn {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Bottom Thumbnail Carousel (Only in Single View) */
     .thumbnails-bar {
       height: 90px;
       background: var(--bg-card);
@@ -249,7 +339,19 @@
       border-radius: 2px;
     }
 
-    /* Modals */
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 20px;
+      margin: auto;
+    }
+    .empty-state i { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; color: #38bdf8; }
+    .empty-state p { margin-top: 10px; font-size: 0.9rem; max-width: 250px; line-height: 1.4; }
+
+
+    /* Modals & Loaders */
     .modal {
       display: none;
       position: fixed;
@@ -261,7 +363,6 @@
       flex-direction: column;
       gap: 16px;
     }
-    
     .modal-content {
       background: var(--bg-card);
       padding: 24px;
@@ -273,152 +374,50 @@
       gap: 15px;
       border: 1px solid var(--border);
     }
-
-    .modal video {
-      max-width: 100%;
-      max-height: 80vh;
-      background: #000;
-      object-fit: contain;
-    }
-
-    .camera-controls {
-      display: flex;
-      gap: 16px;
-      position: absolute;
-      bottom: 30px;
-    }
-
-    .capture-btn {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
-      border: 4px solid white;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+    .modal video { max-width: 100%; max-height: 80vh; background: #000; object-fit: contain; }
+    .camera-controls { display: flex; gap: 16px; position: absolute; bottom: 30px; }
+    .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); border: 4px solid white; cursor: pointer; display: flex; justify-content: center; align-items: center; }
     .capture-btn:active { background: rgba(255, 255, 255, 0.8); }
+    .close-cam-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
 
-    .close-cam-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.5);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.2rem;
-    }
-
-    .empty-state {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 20px;
-    }
-    .empty-state i { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; color: #38bdf8; }
-    .empty-state p { margin-top: 10px; font-size: 0.9rem; max-width: 250px; line-height: 1.4; }
-
-    /* Mobile Floating Action Button (FAB) */
-    .mobile-fab-container {
-      display: none;
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 10;
-    }
-
-    .fab {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: var(--accent);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      font-size: 1.5rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-    }
-    .fab.secondary {
-      width: 48px;
-      height: 48px;
-      background: var(--bg-card);
-      color: var(--text);
-      font-size: 1.2rem;
-      align-self: flex-end;
-    }
-
+    .mobile-fab-container { display: none; position: absolute; bottom: 20px; right: 20px; flex-direction: column; gap: 10px; z-index: 10; }
+    .fab { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); font-size: 1.5rem; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    .fab.secondary { width: 48px; height: 48px; background: var(--bg-card); color: var(--text); font-size: 1.2rem; align-self: flex-end; }
     .edit-toggle-btn { display: none; }
 
-    /* Loading Overlay */
-    .loading-overlay {
-        display: none;
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        z-index: 50;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        font-size: 1.2rem;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .loading-spinner {
-        border: 4px solid rgba(255,255,255,0.3);
-        border-top: 4px solid white;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-    }
+    .loading-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 50; justify-content: center; align-items: center; color: white; font-size: 1.2rem; flex-direction: column; gap: 10px; }
+    .loading-spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* Responsive */
+    /* Mobile Adjustments */
     @media (max-width: 768px) {
       header { padding: 10px 15px; }
       .header-actions .btn-text { display: none; }
       .header-actions .btn { padding: 8px 12px; }
+      
       .app-container { flex-direction: column-reverse; }
+      
       .controls-panel {
-        width: 100%;
-        height: 55vh;
-        border-right: none;
-        border-top: 1px solid var(--border);
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        transform: translateY(100%);
-        padding: 15px;
-        gap: 15px;
+        width: 100%; height: 55vh; border-right: none; border-top: 1px solid var(--border);
+        position: absolute; bottom: 0; left: 0; transform: translateY(100%); padding: 15px; gap: 15px;
       }
       .controls-panel.open { transform: translateY(0); }
-      .preview-area { padding-bottom: 20px; }
+      
+      .main-viewport { padding-bottom: 20px; }
+      
       .edit-toggle-btn {
-        display: flex;
-        position: absolute;
-        bottom: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        border-radius: 20px;
-        padding: 8px 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        display: flex; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+        z-index: 10; border-radius: 20px; padding: 8px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       }
-      .controls-panel > div:first-child { display: none; }
+      
+      .controls-panel > div:first-child { display: none; } /* Hide upload in panel */
       .mobile-fab-container { display: flex; }
-      .thumbnails-bar { padding: 8px 10px; height: 80px; }
+      
+      .grid-container {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 15px;
+      }
+      .grid-item img { height: 130px; }
     }
   </style>
 </head>
@@ -429,6 +428,13 @@
       <i class="fa-solid fa-file-signature"></i>
       <span>DocScan Pro</span>
     </div>
+    
+    <!-- View Toggle (Single vs Grid) -->
+    <div class="view-toggle-btn" id="viewToggleGroup" style="display: none;">
+        <div class="view-toggle-option active" id="viewSingleBtn" title="Single Page View"><i class="fa-solid fa-square"></i></div>
+        <div class="view-toggle-option" id="viewGridBtn" title="Grid Outline View"><i class="fa-solid fa-table-cells-large"></i></div>
+    </div>
+
     <div class="header-actions">
       <button class="btn btn-secondary btn-icon-only" id="clearAllBtn" title="Clear All">
         <i class="fa-solid fa-trash"></i> <span class="btn-text">Clear</span>
@@ -441,7 +447,7 @@
 
   <div class="app-container">
     
-    <!-- Controls Panel -->
+    <!-- Controls Panel (For Detail View Only) -->
     <aside class="controls-panel" id="controlsPanel">
       <div>
         <div class="section-title">1. Capture / Upload</div>
@@ -451,12 +457,12 @@
         </div>
       </div>
 
-      <!-- Page Management -->
+      <!-- Single Page Management -->
       <div>
         <div class="section-title">Manage Page</div>
         <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-          <button class="btn btn-secondary" style="flex:1" id="moveLeftBtn"><i class="fa-solid fa-arrow-left"></i> Move Left</button>
-          <button class="btn btn-secondary" style="flex:1" id="moveRightBtn">Move Right <i class="fa-solid fa-arrow-right"></i></button>
+          <button class="btn btn-secondary" style="flex:1" id="moveLeftBtn"><i class="fa-solid fa-arrow-left"></i> Left</button>
+          <button class="btn btn-secondary" style="flex:1" id="moveRightBtn">Right <i class="fa-solid fa-arrow-right"></i></button>
         </div>
         <button class="btn btn-danger" style="width: 100%" id="deletePageBtn"><i class="fa-solid fa-trash"></i> Delete This Page</button>
       </div>
@@ -501,23 +507,33 @@
     </aside>
 
     <!-- Main Viewport -->
-    <main class="preview-area">
-      <div id="emptyState" class="empty-state">
-        <i class="fa-solid fa-pencil"></i>
-        <h2>Enhance Pencil Notes</h2>
-        <p>Capture or upload your blurry pencil notes to make them crystal clear.</p>
+    <main class="main-viewport">
+      
+      <!-- 1. Single Page View Container -->
+      <div class="view-single" id="viewSingleContainer">
+          <div id="emptyState" class="empty-state">
+            <i class="fa-solid fa-pencil"></i>
+            <h2>Enhance Pencil Notes</h2>
+            <p>Capture or upload your blurry pencil notes to make them crystal clear.</p>
+          </div>
+
+          <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
+            <canvas id="mainCanvas"></canvas>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+                <span>Processing...</span>
+            </div>
+          </div>
       </div>
 
-      <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
-        <canvas id="mainCanvas"></canvas>
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loading-spinner"></div>
-            <span>Processing...</span>
-        </div>
+      <!-- 2. Grid Outline View Container (Hidden initially) -->
+      <div class="view-grid" id="viewGridContainer">
+          <!-- Draggable Grid Items will be injected here -->
+          <div class="grid-container" id="gridContainer"></div>
       </div>
 
-      <!-- Mobile Edit Toggle -->
-      <button class="btn btn-secondary edit-toggle-btn" id="editToggleBtn" style="display: none;">
+      <!-- Mobile Edit Toggle (Only visible in single view) -->
+      <button class="btn btn-secondary edit-toggle-btn" id="editToggleBtn">
         <i class="fa-solid fa-sliders"></i> Adjust Page
       </button>
 
@@ -535,6 +551,7 @@
     </main>
   </div>
 
+  <!-- Bottom Page Carousel (Hidden in Grid View) -->
   <div class="thumbnails-bar" id="thumbBar"></div>
 
   <!-- Export Name Modal -->
@@ -547,8 +564,8 @@
       </div>
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap;">
         <button class="btn btn-secondary" id="cancelExportBtn">Cancel</button>
-        <button class="btn btn-success" id="saveExportBtn"><i class="fa-solid fa-download"></i> Save</button>
-        <button class="btn" id="shareExportBtn" style="display: none; background: #8b5cf6;"><i class="fa-solid fa-share-nodes"></i> Share via...</button>
+        <button class="btn btn-success" id="saveExportBtn"><i class="fa-solid fa-download"></i> Save File</button>
+        <button class="btn" id="shareExportBtn" style="display: none; background: #8b5cf6;"><i class="fa-solid fa-share-nodes"></i> Share App...</button>
       </div>
     </div>
   </div>
@@ -570,6 +587,16 @@
     let activeIndex = -1;
     let isControlsOpen = false;
     let processTimeout = null;
+    let currentView = 'single'; // 'single' or 'grid'
+
+    // View Management DOM
+    const viewToggleGroup = document.getElementById('viewToggleGroup');
+    const viewSingleBtn = document.getElementById('viewSingleBtn');
+    const viewGridBtn = document.getElementById('viewGridBtn');
+    const viewSingleContainer = document.getElementById('viewSingleContainer');
+    const viewGridContainer = document.getElementById('viewGridContainer');
+    const gridContainer = document.getElementById('gridContainer');
+    const thumbBar = document.getElementById('thumbBar');
 
     // DOM Elements
     const fileInput = document.getElementById('fileInput');
@@ -580,7 +607,6 @@
     const editToggleBtn = document.getElementById('editToggleBtn');
     const controlsPanel = document.getElementById('controlsPanel');
 
-    // Page Management Buttons
     const moveLeftBtn = document.getElementById('moveLeftBtn');
     const moveRightBtn = document.getElementById('moveRightBtn');
     const deletePageBtn = document.getElementById('deletePageBtn');
@@ -594,13 +620,11 @@
     const ctx = mainCanvas.getContext('2d');
     const canvasWrapper = document.getElementById('canvasWrapper');
     const emptyState = document.getElementById('emptyState');
-    const thumbBar = document.getElementById('thumbBar');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
     const exportPdfBtn = document.getElementById('exportPdfBtn');
     const clearAllBtn = document.getElementById('clearAllBtn');
     
-    // Export Modal Elements
     const exportModal = document.getElementById('exportModal');
     const fileNameInput = document.getElementById('fileNameInput');
     const cancelExportBtn = document.getElementById('cancelExportBtn');
@@ -617,10 +641,60 @@
 
     let stream = null;
 
-    // Show Share button only if browser supports it
     if (navigator.share && navigator.canShare) {
         shareExportBtn.style.display = 'inline-flex';
     }
+
+    // --- View Toggling ---
+
+    viewSingleBtn.onclick = () => switchView('single');
+    viewGridBtn.onclick = () => switchView('grid');
+
+    function switchView(view) {
+        currentView = view;
+        
+        if (view === 'single') {
+            viewSingleBtn.classList.add('active');
+            viewGridBtn.classList.remove('active');
+            
+            viewSingleContainer.style.display = 'flex';
+            viewGridContainer.style.display = 'none';
+            
+            thumbBar.style.display = 'flex';
+            
+            // Show edit tools and active canvas
+            if (pages.length > 0) {
+                controlsPanel.style.display = 'flex';
+                if (window.innerWidth <= 768) {
+                    editToggleBtn.style.display = 'flex';
+                }
+                loadActivePage();
+            }
+            
+        } else if (view === 'grid') {
+            viewGridBtn.classList.add('active');
+            viewSingleBtn.classList.remove('active');
+            
+            viewSingleContainer.style.display = 'none';
+            viewGridContainer.style.display = 'flex';
+            
+            thumbBar.style.display = 'none';
+            
+            // Hide edit tools in grid mode
+            controlsPanel.style.display = 'none';
+            editToggleBtn.style.display = 'none';
+            
+            if (isControlsOpen) {
+                controlsPanel.classList.remove('open');
+                editToggleBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Adjust Page';
+                editToggleBtn.classList.replace('btn-success', 'btn-secondary');
+                isControlsOpen = false;
+            }
+            
+            renderGrid();
+        }
+    }
+
 
     // --- Initialization & UI Binding ---
 
@@ -642,17 +716,10 @@
       fileInput.value = '';
     };
 
-    // Camera Request (Optimized for max resolution)
     const openCamera = async () => {
       try {
-        // Request the absolute maximum resolution possible (4K) to get crisp pencil notes
         stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-              facingMode: "environment", 
-              width: { ideal: 4096 }, 
-              height: { ideal: 2160 },
-              advanced: [{ focusMode: "continuous" }] // Request autofocus if hardware supports it
-          }, 
+          video: { facingMode: "environment", width: { ideal: 4096 }, height: { ideal: 2160 }, advanced: [{ focusMode: "continuous" }] }, 
           audio: false 
         });
         webcamVideo.srcObject = stream;
@@ -700,11 +767,24 @@
       };
     }
 
+
     // --- Core Application Logic ---
 
     function addPage(imgElement) {
+      // Pre-generate a thumbnail for speed in grid view
+      const tempCanvas = document.createElement('canvas');
+      const MAX_THUMB = 300;
+      const scale = Math.min(MAX_THUMB / imgElement.width, MAX_THUMB / imgElement.height);
+      tempCanvas.width = imgElement.width * scale;
+      tempCanvas.height = imgElement.height * scale;
+      tempCanvas.getContext('2d').drawImage(imgElement, 0, 0, tempCanvas.width, tempCanvas.height);
+      const thumbSrc = tempCanvas.toDataURL('image/jpeg', 0.5);
+
       const pageData = {
+        id: 'page_' + new Date().getTime() + '_' + Math.random().toString(36).substr(2, 9),
         img: imgElement,
+        thumbBase: thumbSrc, // Baseline thumb (unfiltered)
+        thumbActive: thumbSrc, // Filtered thumb
         filter: 'pencil_extreme', 
         blackLevel: 80, 
         whiteLevel: 160, 
@@ -713,36 +793,48 @@
       };
       pages.push(pageData);
       activeIndex = pages.length - 1;
-      renderThumbnails();
-      loadActivePage();
+      
       updateUIState();
+      if (currentView === 'single') {
+          renderThumbnails();
+          loadActivePage();
+      } else {
+          renderGrid();
+      }
     }
 
     function updateUIState() {
       const hasPages = pages.length > 0;
       if(hasPages) {
         emptyState.style.display = 'none';
-        canvasWrapper.style.display = 'flex';
-        moveLeftBtn.disabled = activeIndex <= 0;
-        moveRightBtn.disabled = activeIndex >= pages.length - 1;
-        if(window.innerWidth <= 768) { editToggleBtn.style.display = 'flex'; }
+        viewToggleGroup.style.display = 'flex';
+        
+        if (currentView === 'single') {
+            canvasWrapper.style.display = 'flex';
+            controlsPanel.style.display = 'flex';
+            moveLeftBtn.disabled = activeIndex <= 0;
+            moveRightBtn.disabled = activeIndex >= pages.length - 1;
+            if(window.innerWidth <= 768) { editToggleBtn.style.display = 'flex'; }
+        }
       } else {
         emptyState.style.display = 'block';
+        viewToggleGroup.style.display = 'none';
         canvasWrapper.style.display = 'none';
         editToggleBtn.style.display = 'none';
-        controlsPanel.classList.remove('open');
+        controlsPanel.style.display = 'none';
         isControlsOpen = false;
       }
     }
 
     window.addEventListener('resize', () => {
-       if(pages.length > 0 && window.innerWidth <= 768) {
-           editToggleBtn.style.display = 'flex';
-       } else {
-           editToggleBtn.style.display = 'none';
-           if(window.innerWidth > 768) {
+       if(pages.length > 0 && currentView === 'single') {
+           if(window.innerWidth <= 768) {
+               editToggleBtn.style.display = 'flex';
+           } else {
+               editToggleBtn.style.display = 'none';
                controlsPanel.classList.remove('open');
                isControlsOpen = false;
+               controlsPanel.style.display = 'flex'; // Ensure visible on desktop
            }
        }
     });
@@ -779,13 +871,15 @@
 
     // --- Image Processing Engine ---
 
-    function processAndDraw() {
-      if (activeIndex < 0) return;
+    function processAndDraw(forceThumbnailUpdate = true) {
+      if (activeIndex < 0 || activeIndex >= pages.length) return;
       const p = pages[activeIndex];
       const img = p.img;
+      
       const isRotated = (p.rotation / 90) % 2 !== 0;
       const w = isRotated ? img.height : img.width;
       const h = isRotated ? img.width : img.height;
+      
       const MAX_DIM = 1600; 
       let scale = 1;
       if (w > MAX_DIM || h > MAX_DIM) { scale = Math.min(MAX_DIM/w, MAX_DIM/h); }
@@ -802,7 +896,10 @@
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();
 
-      if(p.filter === 'original') { updateActiveThumbnail(); return; }
+      if(p.filter === 'original') { 
+          if(forceThumbnailUpdate) updateActiveThumbnail(); 
+          return; 
+      }
 
       let imageData = ctx.getImageData(0, 0, targetW, targetH);
       let pixels = imageData.data;
@@ -823,7 +920,6 @@
               pixels[i] = finalVal; pixels[i+1] = finalVal; pixels[i+2] = finalVal;
           }
       } else {
-          // Fallback magic filters
           const thresh = 128;
           for (let i = 0; i < pixels.length; i += 4) {
             let r = pixels[i], g = pixels[i + 1], bVal = pixels[i + 2];
@@ -844,7 +940,7 @@
       }
 
       ctx.putImageData(imageData, 0, 0);
-      updateActiveThumbnail();
+      if(forceThumbnailUpdate) updateActiveThumbnail();
     }
 
     function applyVariableSharpen(imageData, w, h, amount) {
@@ -870,7 +966,169 @@
       return output;
     }
 
-    // --- Page Management Events ---
+
+    // --- Thumbnail Management ---
+    function updateActiveThumbnail() {
+        if (activeIndex >= 0 && activeIndex < pages.length) {
+            // Very low quality for UI thumb
+            pages[activeIndex].thumbActive = mainCanvas.toDataURL('image/jpeg', 0.2);
+            
+            // Update Single View Thumbnail
+            const activeCard = thumbBar.children[activeIndex];
+            if (activeCard) {
+                const img = activeCard.querySelector('img');
+                img.src = pages[activeIndex].thumbActive;
+            }
+            
+            // Update Grid View Thumbnail if active
+            if (currentView === 'grid') {
+                 const gridCard = document.querySelector(`.grid-item[data-id="${pages[activeIndex].id}"] img`);
+                 if(gridCard) gridCard.src = pages[activeIndex].thumbActive;
+            }
+        }
+    }
+
+    function renderThumbnails() {
+      thumbBar.innerHTML = '';
+      pages.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = `thumb-card ${idx === activeIndex ? 'active' : ''}`;
+        
+        const img = document.createElement('img');
+        img.src = p.thumbActive; 
+        
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = `P${idx + 1}`;
+
+        card.appendChild(img);
+        card.appendChild(badge);
+
+        card.onclick = () => {
+          activeIndex = idx;
+          renderThumbnails();
+          loadActivePage();
+        };
+        thumbBar.appendChild(card);
+      });
+    }
+
+    // --- Drag and Drop Grid Management ---
+
+    let dragSourceElement = null;
+
+    function renderGrid() {
+        gridContainer.innerHTML = '';
+        
+        pages.forEach((p, idx) => {
+            const item = document.createElement('div');
+            item.className = 'grid-item';
+            item.draggable = true;
+            item.dataset.index = idx;
+            item.dataset.id = p.id;
+            
+            const img = document.createElement('img');
+            img.src = p.thumbActive;
+            img.draggable = false;
+            
+            const label = document.createElement('div');
+            label.className = 'page-num';
+            label.textContent = `Page ${idx + 1}`;
+            
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            delBtn.onclick = (e) => {
+                e.stopPropagation(); // prevent clicking item
+                if (confirm("Delete this page?")) {
+                    pages.splice(idx, 1);
+                    // Fix active index if needed
+                    if(activeIndex === idx) activeIndex = Math.max(0, idx - 1);
+                    else if (activeIndex > idx) activeIndex--;
+                    
+                    if(pages.length === 0) activeIndex = -1;
+                    
+                    renderGrid();
+                    updateUIState();
+                }
+            };
+            
+            item.appendChild(img);
+            item.appendChild(label);
+            item.appendChild(delBtn);
+            
+            // Click to edit
+            item.onclick = () => {
+                activeIndex = idx;
+                switchView('single');
+            };
+            
+            // Drag Events
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragover', handleDragOver);
+            item.addEventListener('dragleave', handleDragLeave);
+            item.addEventListener('drop', handleDrop);
+            item.addEventListener('dragend', handleDragEnd);
+
+            gridContainer.appendChild(item);
+        });
+    }
+
+    function handleDragStart(e) {
+        dragSourceElement = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', this.dataset.index);
+        this.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault(); 
+        e.dataTransfer.dropEffect = 'move';
+        if(this !== dragSourceElement) {
+            this.classList.add('drag-over');
+        }
+        return false;
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        this.classList.remove('drag-over');
+        
+        if (dragSourceElement !== this) {
+            const sourceIndex = parseInt(dragSourceElement.dataset.index);
+            const targetIndex = parseInt(this.dataset.index);
+            
+            // Reorder array
+            const movedItem = pages.splice(sourceIndex, 1)[0];
+            pages.splice(targetIndex, 0, movedItem);
+            
+            // If active item was moved, track it. Otherwise, track where active item ended up
+            if (activeIndex === sourceIndex) {
+                activeIndex = targetIndex;
+            } else if (activeIndex > sourceIndex && activeIndex <= targetIndex) {
+                activeIndex--;
+            } else if (activeIndex < sourceIndex && activeIndex >= targetIndex) {
+                activeIndex++;
+            }
+            
+            renderGrid(); // Re-render visually
+        }
+        return false;
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.grid-item').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+    }
+
+
+    // --- Single View Controls Events ---
 
     moveLeftBtn.onclick = () => {
         if (activeIndex > 0) {
@@ -898,8 +1156,6 @@
             renderThumbnails(); loadActivePage();
         }
     };
-
-    // --- Adjustments Events ---
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.onclick = () => {
@@ -936,34 +1192,18 @@
       if (activeIndex < 0) return; pages[activeIndex].rotation = (pages[activeIndex].rotation + 90) % 360; loadActivePage();
     };
 
-    function renderThumbnails() {
-      thumbBar.innerHTML = '';
-      pages.forEach((p, idx) => {
-        const card = document.createElement('div');
-        card.className = `thumb-card ${idx === activeIndex ? 'active' : ''}`;
-        const img = document.createElement('img'); img.src = p.img.src; 
-        const badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = `P${idx + 1}`;
-        card.appendChild(img); card.appendChild(badge);
-        card.onclick = () => { activeIndex = idx; renderThumbnails(); loadActivePage(); };
-        thumbBar.appendChild(card);
-      });
-    }
-
-    function updateActiveThumbnail() {
-      const activeCard = thumbBar.children[activeIndex];
-      if (activeCard) {
-        const img = activeCard.querySelector('img');
-        img.src = mainCanvas.toDataURL('image/jpeg', 0.2); 
-      }
-    }
-
     clearAllBtn.onclick = () => {
       if (confirm('Delete all scanned pages?')) {
-        pages = []; activeIndex = -1; renderThumbnails(); updateUIState();
+        pages = []; activeIndex = -1; 
+        renderThumbnails(); 
+        if(currentView === 'grid') renderGrid();
+        updateUIState();
       }
     };
 
+
     // --- PDF Export & Share Logic ---
+
     exportPdfBtn.onclick = () => {
       if (pages.length === 0) { alert('Please add at least one scanned image before exporting.'); return; }
       const dateStr = new Date().toISOString().slice(0, 10);
@@ -980,32 +1220,6 @@
 
     cancelExportBtn.onclick = () => { exportModal.style.display = 'none'; };
 
-    // Common PDF Generation Function
-    function generatePDF() {
-      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const originalIndex = activeIndex;
-
-      pages.forEach((p, i) => {
-        if (i > 0) pdf.addPage();
-        activeIndex = i;
-        processAndDraw(); 
-        const imgData = mainCanvas.toDataURL('image/jpeg', 0.85); 
-        const imgProps = pdf.getImageProperties(imgData);
-        const ratio = imgProps.width / imgProps.height;
-        let printW = pdfWidth; let printH = pdfWidth / ratio;
-        if (printH > pdfHeight) { printH = pdfHeight; printW = pdfHeight * ratio; }
-        const xOffset = (pdfWidth - printW) / 2;
-        const yOffset = (pdfHeight - printH) / 2;
-        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
-      });
-
-      activeIndex = originalIndex;
-      loadActivePage();
-      return pdf;
-    }
-
     function getFileName() {
         let name = fileNameInput.value.trim();
         if(name === '') name = 'Scanned_Document';
@@ -1013,7 +1227,42 @@
         return name;
     }
 
-    // Standard Save
+    function generatePDF() {
+      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const originalIndex = activeIndex;
+      
+      // Make sure we generate using the latest UI state
+      let currentOriginalView = currentView;
+      
+      // We need to render the pages one by one for the PDF
+      pages.forEach((p, i) => {
+        if (i > 0) pdf.addPage();
+        activeIndex = i;
+        processAndDraw(false); // False = don't update thumbnail during export for speed
+        
+        const imgData = mainCanvas.toDataURL('image/jpeg', 0.85); 
+        const imgProps = pdf.getImageProperties(imgData);
+        const ratio = imgProps.width / imgProps.height;
+        let printW = pdfWidth; let printH = pdfWidth / ratio;
+        
+        if (printH > pdfHeight) { printH = pdfHeight; printW = pdfHeight * ratio; }
+        
+        const xOffset = (pdfWidth - printW) / 2;
+        const yOffset = (pdfHeight - printH) / 2;
+        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, printW, printH);
+      });
+
+      // Restore State
+      activeIndex = originalIndex;
+      if(activeIndex >= 0) {
+          processAndDraw(false);
+      }
+      
+      return pdf;
+    }
+
     saveExportBtn.onclick = () => {
       exportModal.style.display = 'none';
       const fName = getFileName();
@@ -1028,7 +1277,6 @@
       }, 50);
     };
 
-    // Native Share (Mobile)
     shareExportBtn.onclick = () => {
       exportModal.style.display = 'none';
       const fName = getFileName();
@@ -1038,7 +1286,6 @@
       setTimeout(async () => {
           const pdf = generatePDF();
           try {
-              // Convert jsPDF to Blob, then to a native File object for sharing
               const pdfBlob = pdf.output('blob');
               const fileToShare = new File([pdfBlob], fName, { type: 'application/pdf' });
               
@@ -1053,7 +1300,6 @@
               }
           } catch (error) {
               console.log('Error sharing:', error);
-              // Fallback if user cancels the share dialog or it fails
           } finally {
               loadingOverlay.style.display = 'none';
               loadingOverlay.querySelector('span').textContent = "Processing...";
