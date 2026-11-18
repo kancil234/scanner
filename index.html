@@ -651,6 +651,28 @@
       const pageCounterPill = document.getElementById('pageCounterPill');
       const thumbBar = document.getElementById('thumbBar');
 
+      // Filter, Slider & Orientation Controls
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const activeFilterBadge = document.getElementById('activeFilterBadge');
+      const pencilLevelsGroup = document.getElementById('pencilLevelsGroup');
+      const bwThresholdGroup = document.getElementById('bwThresholdGroup');
+      const sharpnessGroup = document.getElementById('sharpnessGroup');
+
+      const sliderBlackLevel = document.getElementById('sliderBlackLevel');
+      const sliderWhiteLevel = document.getElementById('sliderWhiteLevel');
+      const sliderThreshold = document.getElementById('sliderThreshold');
+      const sliderSharpness = document.getElementById('sliderSharpness');
+      const valBlackLevel = document.getElementById('valBlackLevel');
+      const valWhiteLevel = document.getElementById('valWhiteLevel');
+      const valThreshold = document.getElementById('valThreshold');
+      const valSharpness = document.getElementById('valSharpness');
+
+      const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+      const rotateRightBtn = document.getElementById('rotateRightBtn');
+      const moveLeftBtn = document.getElementById('moveLeftBtn');
+      const moveRightBtn = document.getElementById('moveRightBtn');
+      const deletePageBtn = document.getElementById('deletePageBtn');
+
       // Filmstrip & Stage Navigation Arrows
       const prevPageNavBtn = document.getElementById('prevPageNavBtn');
       const nextPageNavBtn = document.getElementById('nextPageNavBtn');
@@ -859,6 +881,300 @@
           showToast(`Added ${e.dataTransfer.files.length} image(s)`);
         }
       });
+
+      // -------------------- High-Resolution Live Camera Capture --------------------
+
+      async function openCameraModal() {
+        try {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showMessage('Camera Unavailable', 'Your browser does not support live camera capture. Please use the Upload button instead.', 'warning');
+            return;
+          }
+          activeCameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'environment',
+              width: { ideal: 4096 },
+              height: { ideal: 2160 },
+              advanced: [{ focusMode: 'continuous' }]
+            },
+            audio: false
+          });
+          webcamVideo.srcObject = activeCameraStream;
+          camModal.classList.remove('hidden');
+          camModal.classList.add('flex');
+        } catch (err) {
+          console.error('Camera error:', err);
+          showMessage('Camera Access Denied', 'Could not access your camera. Please check browser permissions or upload a photo from your device.', 'error');
+        }
+      }
+
+      function stopCameraModal() {
+        if (activeCameraStream) {
+          activeCameraStream.getTracks().forEach(track => track.stop());
+          activeCameraStream = null;
+        }
+        webcamVideo.srcObject = null;
+        camModal.classList.add('hidden');
+        camModal.classList.remove('flex');
+      }
+
+      [openCamBtnDesktop, openCamBtnMobile, emptyCamBtn].forEach(btn => {
+        if (btn) btn.addEventListener('click', openCameraModal);
+      });
+
+      closeCamBtn.addEventListener('click', stopCameraModal);
+
+      captureSnapBtn.addEventListener('click', () => {
+        if (!webcamVideo.videoWidth || !webcamVideo.videoHeight) return;
+        const snapCanvas = document.createElement('canvas');
+        snapCanvas.width = webcamVideo.videoWidth;
+        snapCanvas.height = webcamVideo.videoHeight;
+        snapCanvas.getContext('2d').drawImage(webcamVideo, 0, 0);
+
+        const img = new Image();
+        img.onload = () => {
+          addPage(img);
+          stopCameraModal();
+          showToast('Photo captured');
+        };
+        img.src = snapCanvas.toDataURL('image/jpeg', 0.98);
+      });
+
+      // -------------------- Image Processing & Enhancement Engine --------------------
+
+      const FILTER_LABELS = {
+        pencil_extreme: 'Extreme Pencil',
+        magic_color: 'Magic Color',
+        magic_bw: 'Magic Pro B&W',
+        original: 'Original'
+      };
+
+      /**
+       * Applies a 3x3 Laplacian edge-sharpening kernel to boost blurry pencil strokes.
+       */
+      function applyVariableSharpen(imageData, w, h, amount) {
+        const strength = amount / 50.0;
+        if (strength <= 0) return imageData;
+
+        const src = imageData.data;
+        const output = new ImageData(new Uint8ClampedArray(src), w, h);
+        const dst = output.data;
+
+        const centerWeight = 1 + (4 * strength);
+        const edgeWeight = -strength;
+
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const idx = (y * w + x) * 4;
+            const idxT = ((y - 1) * w + x) * 4;
+            const idxB = ((y + 1) * w + x) * 4;
+            const idxL = (y * w + (x - 1)) * 4;
+            const idxR = (y * w + (x + 1)) * 4;
+
+            for (let c = 0; c < 3; c++) {
+              const val =
+                src[idx + c] * centerWeight +
+                src[idxT + c] * edgeWeight +
+                src[idxB + c] * edgeWeight +
+                src[idxL + c] * edgeWeight +
+                src[idxR + c] * edgeWeight;
+              dst[idx + c] = val < 0 ? 0 : (val > 255 ? 255 : val);
+            }
+          }
+        }
+        return output;
+      }
+
+      /**
+       * Renders a page object onto any target canvas with rotation, Levels LUT, and sharpening.
+       */
+      function renderPageToCanvas(pageObj, targetCanvas, maxDim = 1600, forceOriginal = false) {
+        if (!pageObj || !pageObj.img) return;
+        const img = pageObj.img;
+        const targetCtx = targetCanvas.getContext('2d', { willReadFrequently: true });
+
+        const isRotated = ((pageObj.rotation || 0) / 90) % 2 !== 0;
+        const rawW = isRotated ? img.height : img.width;
+        const rawH = isRotated ? img.width : img.height;
+
+        let scale = 1;
+        if (rawW > maxDim || rawH > maxDim) {
+          scale = Math.min(maxDim / rawW, maxDim / rawH);
+        }
+
+        const targetW = Math.max(1, Math.floor(rawW * scale));
+        const targetH = Math.max(1, Math.floor(rawH * scale));
+        targetCanvas.width = targetW;
+        targetCanvas.height = targetH;
+
+        targetCtx.save();
+        targetCtx.translate(targetW / 2, targetH / 2);
+        targetCtx.rotate(((pageObj.rotation || 0) * Math.PI) / 180);
+        targetCtx.scale(scale, scale);
+        targetCtx.drawImage(img, -img.width / 2, -img.height / 2);
+        targetCtx.restore();
+
+        if (forceOriginal || pageObj.filter === 'original') {
+          return;
+        }
+
+        let imageData = targetCtx.getImageData(0, 0, targetW, targetH);
+        const pixels = imageData.data;
+
+        if (pageObj.filter === 'pencil_extreme') {
+          const bLevel = parseInt(pageObj.blackLevel ?? 80, 10);
+          const wLevel = parseInt(pageObj.whiteLevel ?? 160, 10);
+          const range = Math.max(1, wLevel - bLevel);
+
+          const levelsLUT = new Uint8Array(256);
+          for (let i = 0; i < 256; i++) {
+            if (i <= bLevel) levelsLUT[i] = 0;
+            else if (i >= wLevel) levelsLUT[i] = 255;
+            else levelsLUT[i] = Math.floor(((i - bLevel) / range) * 255);
+          }
+
+          for (let i = 0; i < pixels.length; i += 4) {
+            const luma = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+            const mapped = levelsLUT[Math.floor(luma)];
+            pixels[i] = mapped;
+            pixels[i + 1] = mapped;
+            pixels[i + 2] = mapped;
+          }
+        } else if (pageObj.filter === 'magic_color') {
+          for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i];
+            let g = pixels[i + 1];
+            let b = pixels[i + 2];
+            const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+
+            if (luma > 145) {
+              r = Math.min(255, r * 1.25 + 22);
+              g = Math.min(255, g * 1.25 + 22);
+              b = Math.min(255, b * 1.25 + 22);
+            } else {
+              r = Math.max(0, r * 0.82);
+              g = Math.max(0, g * 0.82);
+              b = Math.max(0, b * 0.82);
+            }
+            pixels[i] = r;
+            pixels[i + 1] = g;
+            pixels[i + 2] = b;
+          }
+        } else if (pageObj.filter === 'magic_bw') {
+          const thresh = parseInt(pageObj.threshold ?? 135, 10);
+          for (let i = 0; i < pixels.length; i += 4) {
+            const luma = 0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2];
+            const val = luma >= thresh ? 255 : 0;
+            pixels[i] = val;
+            pixels[i + 1] = val;
+            pixels[i + 2] = val;
+          }
+        }
+
+        const sharpnessAmount = parseInt(pageObj.sharpness ?? 0, 10);
+        if (sharpnessAmount > 0 && pageObj.filter !== 'magic_bw') {
+          imageData = applyVariableSharpen(imageData, targetW, targetH, sharpnessAmount);
+        }
+
+        targetCtx.putImageData(imageData, 0, 0);
+      }
+
+      function loadActivePage() {
+        updateLayoutVisibility();
+        if (activeIndex < 0 || activeIndex >= pages.length) return;
+
+        const p = pages[activeIndex];
+        sliderBlackLevel.value = p.blackLevel;
+        sliderWhiteLevel.value = p.whiteLevel;
+        sliderThreshold.value = p.threshold;
+        sliderSharpness.value = p.sharpness;
+
+        valBlackLevel.textContent = p.blackLevel;
+        valWhiteLevel.textContent = p.whiteLevel;
+        valThreshold.textContent = p.threshold;
+        valSharpness.textContent = p.sharpness;
+
+        activeFilterBadge.textContent = FILTER_LABELS[p.filter] || 'Extreme Pencil';
+
+        filterBtns.forEach(btn => {
+          const isMatch = btn.dataset.filter === p.filter;
+          if (isMatch) {
+            btn.className = 'filter-btn active shrink-0 px-3 py-2.5 rounded-xl border border-rose-500/60 bg-rose-600 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5';
+          } else {
+            btn.className = 'filter-btn shrink-0 px-3 py-2.5 rounded-xl border border-borderDark bg-panelDark hover:bg-slate-800 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5';
+          }
+        });
+
+        pencilLevelsGroup.classList.toggle('hidden', p.filter !== 'pencil_extreme');
+        bwThresholdGroup.classList.toggle('hidden', p.filter !== 'magic_bw');
+        sharpnessGroup.classList.toggle('hidden', p.filter === 'original' || p.filter === 'magic_bw');
+
+        queueProcessAndDraw();
+      }
+
+      function queueProcessAndDraw() {
+        if (activeIndex < 0 || activeIndex >= pages.length) return;
+        clearTimeout(processDebounceTimer);
+        loadingText.textContent = 'Enhancing clarity...';
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+
+        processDebounceTimer = setTimeout(() => {
+          requestAnimationFrame(() => {
+            if (activeIndex >= 0 && activeIndex < pages.length) {
+              renderPageToCanvas(pages[activeIndex], mainCanvas, 1600, false);
+              updateActiveThumbnail();
+            }
+            loadingOverlay.classList.add('hidden');
+            loadingOverlay.classList.remove('flex');
+          });
+        }, 60);
+      }
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (activeIndex < 0) return;
+          const chosen = btn.dataset.filter;
+          pages[activeIndex].filter = chosen;
+          if (chosen === 'pencil_extreme') {
+            pages[activeIndex].blackLevel = 80;
+            pages[activeIndex].whiteLevel = 160;
+            pages[activeIndex].sharpness = 60;
+          } else if (chosen === 'magic_color') {
+            pages[activeIndex].sharpness = 35;
+          }
+          loadActivePage();
+        });
+      });
+
+      sliderBlackLevel.addEventListener('input', (e) => {
+        let val = parseInt(e.target.value, 10);
+        const wVal = parseInt(sliderWhiteLevel.value, 10);
+        if (val >= wVal) {
+          val = wVal - 1;
+          e.target.value = val;
+        }
+        valBlackLevel.textContent = val;
+        if (activeIndex >= 0) {
+          pages[activeIndex].blackLevel = val;
+          queueProcessAndDraw();
+        }
+      });
+
+      sliderWhiteLevel.addEventListener('input', (e) => {
+        let val = parseInt(e.target.value, 10);
+        const bVal = parseInt(sliderBlackLevel.value, 10);
+        if (val <= bVal) {
+          val = bVal + 1;
+          e.target.value = val;
+        }
+        valWhiteLevel.textContent = val;
+        if (activeIndex >= 0) {
+          pages[activeIndex].whiteLevel = val;
+          queueProcessAndDraw();
+        }
+      });
+
       // -------------------- Page State & UI Synchronization --------------------
 
       function generateInitialThumbDataUrl(imgElement) {
